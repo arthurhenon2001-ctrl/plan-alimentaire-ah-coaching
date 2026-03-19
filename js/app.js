@@ -655,6 +655,7 @@ function renderWeekPlan(constraints) {
 }
 
 function switchDay(dayIndex) {
+  state._currentDay = dayIndex;
   document.querySelectorAll('.day-tab').forEach((t, i) => t.classList.toggle('active', i === dayIndex));
   state.meals = state.weekMeals[dayIndex];
   updateRecapBar(state.meals);
@@ -986,6 +987,18 @@ function redistributeMealMacros(meal) {
   }
 }
 
+function _reRender(constraints) {
+  if (state.planDays === 7 && state.weekMeals) {
+    const day = state._currentDay || 0;
+    updateRecapBar(state.weekMeals[day]);
+    renderDayContent(day, constraints);
+  } else {
+    updateRecapBar(state.meals);
+    renderPlan(state.meals, constraints);
+  }
+  Storage.save(state);
+}
+
 function swapFood(mealIndex, slotIndex) {
   const slot = state.meals[mealIndex].slots[slotIndex];
   const oldId = slot.selectedFood ? slot.selectedFood.id : null;
@@ -995,8 +1008,10 @@ function swapFood(mealIndex, slotIndex) {
     excludedIds: state.excludedFoods,
   };
   MealPlanner.regenerateSlot(slot, constraints, oldId);
-  renderPlan(state.meals, constraints);
-  Storage.save(state);
+  // Re-solve quantities after swap
+  const activeSlots = state.meals[mealIndex].slots.filter(s => !s.isVeg && !s.skipped && s.selectedFood);
+  MealPlanner._solveQuantities(activeSlots, state.meals[mealIndex]);
+  _reRender(constraints);
 }
 
 function regenerateMeal(mealIndex) {
@@ -1007,12 +1022,13 @@ function regenerateMeal(mealIndex) {
     excludedIds: state.excludedFoods,
   };
   meal.slots.forEach(slot => {
-    if (!slot.isVeg) {
+    if (!slot.isVeg && !slot.skipped) {
       MealPlanner.regenerateSlot(slot, constraints, null);
     }
   });
-  renderPlan(state.meals, constraints);
-  Storage.save(state);
+  const activeSlots = meal.slots.filter(s => !s.isVeg && !s.skipped && s.selectedFood);
+  MealPlanner._solveQuantities(activeSlots, meal);
+  _reRender(constraints);
 }
 
 function regenerateAll() {
@@ -1021,9 +1037,14 @@ function regenerateAll() {
     diet: state.diet,
     excludedIds: state.excludedFoods,
   };
-  MealPlanner.generateFixedPlan(state.meals, constraints);
-  renderPlan(state.meals, constraints);
-  Storage.save(state);
+  if (state.planDays === 7 && state.weekMeals) {
+    state.weekMeals.forEach(dayMeals => {
+      MealPlanner.generateFixedPlan(dayMeals, constraints);
+    });
+  } else {
+    MealPlanner.generateFixedPlan(state.meals, constraints);
+  }
+  _reRender(constraints);
 }
 
 // ── RECAP BAR ──
@@ -1085,7 +1106,7 @@ function renderSummary() {
 
   html += `<div class="summary-section">
     <h3>Ton plan alimentaire</h3>
-    <div class="summary-row"><span>Mode</span><strong>${state.planMode === 'fixed' ? 'Plan fixe (auto)' : 'Équivalences (flexible)'}</strong></div>
+    <div class="summary-row"><span>Mode</span><strong>${state.planMode === 'fixed' ? 'Plan fixe' : 'Équivalences (flexible)'}</strong></div>
     <div class="summary-row"><span>Nombre de repas</span><strong>${state.mealCount} repas/jour</strong></div>
   </div>`;
 
@@ -1124,9 +1145,6 @@ function renderSummary() {
 
   // Générer la liste de courses
   renderShoppingList();
-
-  // Suggestions de recettes
-  renderRecipeSuggestions();
 }
 
 // ── LISTE DE COURSES ──
