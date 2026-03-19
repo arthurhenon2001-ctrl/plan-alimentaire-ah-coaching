@@ -1379,127 +1379,34 @@ function exportShoppingPDF() {
 }
 
 // ── SUGGESTIONS DE RECETTES ──
+// matchIngredients = IDs from our nutrition-db.js that match the recipe
+const BASE_URL = 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=';
 const RECIPE_SUGGESTIONS = [
-  {
-    id: 'overnight-oats-proteine',
-    name: 'Overnight Oats Protéiné',
-    emoji: '🥣',
-    category: 'Petit-déjeuner',
-    time: 5,
-    tags: ['Meal prep', 'Perte de poids'],
-    matchIngredients: ['skyr', 'avoine'],
-    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=overnight-oats-proteine'
-  },
-  {
-    id: 'pancakes-banane-avoine',
-    name: 'Pancakes Banane-Avoine',
-    emoji: '🥞',
-    category: 'Petit-déjeuner',
-    time: 15,
-    tags: ['Sans farine', 'Rapide'],
-    matchIngredients: ['banane', 'avoine', 'oeuf'],
-    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=pancakes-banane-avoine'
-  },
-  {
-    id: 'bowl-poulet-quinoa',
-    name: 'Bowl Poulet Quinoa',
-    emoji: '🥗',
-    category: 'Déjeuner',
-    time: 25,
-    tags: ['Haute protéine', 'Batch cooking'],
-    matchIngredients: ['poulet', 'quinoa'],
-    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=bowl-poulet-quinoa'
-  },
-  {
-    id: 'saumon-patate-douce',
-    name: 'Saumon & Patate douce',
-    emoji: '🐟',
-    category: 'Dîner',
-    time: 30,
-    tags: ['Oméga 3', 'Complet'],
-    matchIngredients: ['saumon', 'patate_douce'],
-    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=saumon-patate-douce'
-  },
-  {
-    id: 'wrap-dinde-avocat',
-    name: 'Wrap Dinde Avocat',
-    emoji: '🌯',
-    category: 'Déjeuner',
-    time: 10,
-    tags: ['Express', 'À emporter'],
-    matchIngredients: ['dinde', 'avocat', 'tortilla'],
-    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=wrap-dinde-avocat'
-  },
-  {
-    id: 'porridge-proteine',
-    name: 'Porridge Protéiné',
-    emoji: '🥣',
-    category: 'Petit-déjeuner',
-    time: 10,
-    tags: ['Chaud', 'Réconfortant'],
-    matchIngredients: ['avoine', 'whey', 'banane'],
-    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=porridge-proteine'
-  },
-  {
-    id: 'salade-lentilles-chevre',
-    name: 'Salade Lentilles & Chèvre',
-    emoji: '🥗',
-    category: 'Déjeuner',
-    time: 15,
-    tags: ['Végétarien', 'Rassasiant'],
-    matchIngredients: ['lentilles', 'chevre'],
-    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=salade-lentilles-chevre'
-  },
-  {
-    id: 'omelette-legumes',
-    name: 'Omelette aux légumes',
-    emoji: '🥚',
-    category: 'Dîner',
-    time: 10,
-    tags: ['Low carb', 'Express'],
-    matchIngredients: ['oeuf', 'blanc_oeuf'],
-    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=omelette-legumes'
-  },
-  {
-    id: 'riz-boeuf-haricots',
-    name: 'Riz Bœuf Haricots',
-    emoji: '🍛',
-    category: 'Déjeuner',
-    time: 25,
-    tags: ['Haute protéine', 'Batch cooking'],
-    matchIngredients: ['boeuf_5', 'boeuf_bavette', 'riz_blanc', 'riz_complet', 'haricots_rouges'],
-    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=riz-boeuf-haricots'
-  },
-  {
-    id: 'smoothie-proteine',
-    name: 'Smoothie Protéiné',
-    emoji: '🥤',
-    category: 'Collation',
-    time: 5,
-    tags: ['Post-training', 'Express'],
-    matchIngredients: ['whey', 'banane', 'fruits_rouges'],
-    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=smoothie-proteine'
-  },
-  {
-    id: 'poke-bowl-cabillaud',
-    name: 'Poké Bowl Cabillaud',
-    emoji: '🐠',
-    category: 'Déjeuner',
-    time: 20,
-    tags: ['Frais', 'Complet'],
-    matchIngredients: ['cabillaud', 'riz_blanc', 'avocat'],
-    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=poke-bowl-cabillaud'
-  },
-  {
-    id: 'pates-poulet-pesto',
-    name: 'Pâtes Poulet Pesto',
-    emoji: '🍝',
-    category: 'Déjeuner',
-    time: 20,
-    tags: ['Gourmand', 'Batch cooking'],
-    matchIngredients: ['poulet', 'pates'],
-    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=pates-poulet-pesto'
-  },
+  { id: 'overnight-oats-proteine', name: 'Overnight Oats Protéiné', emoji: '🥣', category: 'Petit-déjeuner', time: 5, tags: ['Meal prep', 'Perte de poids'], matchIngredients: ['skyr', 'avoine'] },
+  { id: 'pancakes-banane-avoine', name: 'Pancakes Banane-Avoine', emoji: '🥞', category: 'Petit-déjeuner', time: 15, tags: ['Sans farine', 'Rapide'], matchIngredients: ['banane', 'avoine', 'oeuf'] },
+  { id: 'porridge-pomme-cannelle', name: 'Porridge Pomme Cannelle', emoji: '🥣', category: 'Petit-déjeuner', time: 10, tags: ['Chaud', 'Réconfortant'], matchIngredients: ['avoine', 'pomme'] },
+  { id: 'french-toast-proteine', name: 'French Toast Protéiné', emoji: '🍞', category: 'Petit-déjeuner', time: 15, tags: ['Gourmand', 'Haute protéine'], matchIngredients: ['pain_complet', 'oeuf', 'blanc_oeuf'] },
+  { id: 'bol-skyr-fruits-rouges', name: 'Bol Skyr Fruits Rouges', emoji: '🫐', category: 'Petit-déjeuner', time: 5, tags: ['Express', 'Sans cuisson'], matchIngredients: ['skyr', 'fruits_rouges', 'avoine'] },
+  { id: 'omelette-express', name: 'Omelette Express', emoji: '🥚', category: 'Petit-déjeuner salé', time: 10, tags: ['Low carb', 'Express'], matchIngredients: ['oeuf', 'blanc_oeuf'] },
+  { id: 'tartine-avocat-oeuf', name: 'Tartine Avocat Œuf', emoji: '🥑', category: 'Petit-déjeuner salé', time: 10, tags: ['Complet', 'Tendance'], matchIngredients: ['pain_complet', 'avocat', 'oeuf'] },
+  { id: 'wrap-oeuf-dinde', name: 'Wrap Œuf Dinde', emoji: '🌯', category: 'Petit-déjeuner salé', time: 10, tags: ['Express', 'À emporter'], matchIngredients: ['tortilla', 'oeuf', 'dinde'] },
+  { id: 'wrap-poulet-avocat', name: 'Wrap Poulet Avocat', emoji: '🌯', category: 'Déjeuner', time: 10, tags: ['Express', 'À emporter'], matchIngredients: ['tortilla', 'poulet', 'avocat', 'haricots_noirs'] },
+  { id: 'poke-bowl-saumon', name: 'Poké Bowl Saumon', emoji: '🐟', category: 'Déjeuner', time: 20, tags: ['Frais', 'Oméga 3'], matchIngredients: ['saumon', 'riz_blanc', 'avocat'] },
+  { id: 'buddha-bowl-quinoa', name: 'Buddha Bowl Quinoa', emoji: '🥗', category: 'Déjeuner', time: 25, tags: ['Veggie', 'Complet'], matchIngredients: ['quinoa', 'pois_chiches', 'avocat'] },
+  { id: 'poulet-curry-riz', name: 'Poulet Curry Riz', emoji: '🍛', category: 'Déjeuner', time: 25, tags: ['Épicé', 'Batch cooking'], matchIngredients: ['poulet', 'riz_blanc', 'riz_complet'] },
+  { id: 'pasta-bolognese', name: 'Pasta Bolognese', emoji: '🍝', category: 'Déjeuner', time: 30, tags: ['Classique', 'Batch cooking'], matchIngredients: ['pates', 'boeuf_5', 'boeuf_bavette'] },
+  { id: 'salade-cesar-poulet', name: 'Salade César Poulet', emoji: '🥗', category: 'Déjeuner', time: 15, tags: ['Fraîche', 'Haute protéine'], matchIngredients: ['poulet', 'pain_complet', 'yaourt_grec'] },
+  { id: 'wok-nouilles-poulet', name: 'Wok Nouilles Poulet', emoji: '🍜', category: 'Déjeuner', time: 20, tags: ['Asiatique', 'Rapide'], matchIngredients: ['soba', 'poulet'] },
+  { id: 'chili-con-carne', name: 'Chili Con Carne', emoji: '🌶', category: 'Déjeuner', time: 30, tags: ['Épicé', 'Batch cooking'], matchIngredients: ['boeuf_5', 'haricots_rouges', 'haricots_noirs'] },
+  { id: 'steak-patate-douce', name: 'Steak & Patate douce', emoji: '🥩', category: 'Dîner', time: 25, tags: ['Classique', 'Complet'], matchIngredients: ['boeuf_5', 'boeuf_bavette', 'patate_douce'] },
+  { id: 'saumon-grille-brocoli', name: 'Saumon grillé Brocoli', emoji: '🐟', category: 'Dîner', time: 20, tags: ['Oméga 3', 'Simple'], matchIngredients: ['saumon', 'riz_blanc', 'riz_complet'] },
+  { id: 'cabillaud-papillote', name: 'Cabillaud en papillote', emoji: '🐠', category: 'Dîner', time: 25, tags: ['Léger', 'Sain'], matchIngredients: ['cabillaud'] },
+  { id: 'smoothie-proteine-banane', name: 'Smoothie Protéiné', emoji: '🥤', category: 'Collation', time: 5, tags: ['Post-training', 'Express'], matchIngredients: ['whey', 'banane', 'fruits_rouges'] },
+  { id: 'energy-balls-chocolat', name: 'Energy Balls Chocolat', emoji: '🍫', category: 'Collation', time: 15, tags: ['Snack', 'Sans cuisson'], matchIngredients: ['avoine', 'beurre_cacahuete'] },
+  { id: 'pudding-chia-coco', name: 'Pudding Chia Coco', emoji: '🥥', category: 'Collation', time: 5, tags: ['Meal prep', 'Vegan'], matchIngredients: ['graines_chia'] },
+  { id: 'galette-sarrasin-complete', name: 'Galette Sarrasin Complète', emoji: '🥞', category: 'Dîner', time: 15, tags: ['Sans gluten', 'Français'], matchIngredients: ['galette_sarrasin', 'oeuf', 'jambon', 'fromage_rape'] },
+  { id: 'bowl-sale-cottage', name: 'Bowl Salé Cottage', emoji: '🥗', category: 'Déjeuner', time: 10, tags: ['Express', 'Frais'], matchIngredients: ['cottage', 'avocat'] },
+  { id: 'croque-monsieur-healthy', name: 'Croque-monsieur Healthy', emoji: '🥪', category: 'Dîner', time: 15, tags: ['Gourmand', 'Rapide'], matchIngredients: ['pain_mie', 'jambon', 'fromage_rape'] },
 ];
 
 function renderRecipeSuggestions() {
@@ -1531,7 +1438,7 @@ function renderRecipeSuggestions() {
 
   let html = '<div class="recipe-grid">';
   scored.forEach(recipe => {
-    html += `<a href="${recipe.url}" target="_blank" rel="noopener" class="recipe-card-link">
+    html += `<a href="${BASE_URL}${recipe.id}" target="_blank" rel="noopener" class="recipe-card-link">
       <div class="recipe-suggest-card">
         <div class="recipe-emoji">${recipe.emoji}</div>
         <div class="recipe-info">
