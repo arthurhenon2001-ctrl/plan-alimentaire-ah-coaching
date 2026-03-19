@@ -1,0 +1,1188 @@
+/* ============================================================================
+   AH COACHING — PLAN ALIMENTAIRE — STYLES
+   ============================================================================ */
+
+:root {
+  --beige: #F5F0EB;
+  --beige-dark: #E8E0D8;
+  --brown: #6B4F3A;
+  --brown-light: #8B6F5A;
+  --brown-dark: #4A3628;
+  --black: #1A1A1A;
+  --white: #FFFFFF;
+  --cream: #FAF8F5;
+  --red: #D94035;
+  --red-light: #FFF0EF;
+  --green: #2D8C4E;
+  --green-light: #EDFAF2;
+  --green-dark: #1F6B3A;
+  --gold: #C9A96E;
+  --gray: #9B9590;
+  --gray-light: #D4CFC9;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--beige);
+  color: var(--black);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+.app-header {
+  background: var(--white);
+  padding: 32px 24px 24px;
+  text-align: center;
+  border-bottom: 1px solid var(--beige-dark);
+}
+
+.app-badge {
+  display: inline-block;
+  padding: 5px 16px;
+  background: var(--brown);
+  color: var(--white);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  border-radius: 20px;
+  margin-bottom: 16px;
+}
+
+.app-header h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--brown-dark);
+  line-height: 1.2;
+}
+
+.app-header h1 span {
+  display: block;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--brown);
+  font-size: 22px;
+  margin-top: 4px;
+}
+
+.app-subtitle {
+  font-size: 13px;
+  color: var(--gray);
+  margin-top: 12px;
+  line-height: 1.5;
+}
+
+/* ── PROGRESS BAR ── */
+.progress-wrap {
+  background: var(--white);
+  padding: 12px 24px 16px;
+  border-bottom: 1px solid var(--beige-dark);
+}
+
+.progress-bar {
+  height: 4px;
+  background: var(--beige);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--brown);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+  width: 0%;
+}
+
+.step-indicator {
+  text-align: center;
+  font-size: 10px;
+  color: var(--gray);
+  margin-top: 8px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ── STEPS ── */
+.step {
+  display: none;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+}
+
+.step.active { display: block; }
+
+.step-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--brown-dark);
+  margin-bottom: 6px;
+}
+
+.step-desc {
+  font-size: 13px;
+  color: var(--gray);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+/* ── FORM ELEMENTS ── */
+.form-section {
+  margin-bottom: 28px;
+}
+
+.form-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--brown);
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--beige-dark);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--brown-dark);
+}
+
+.form-input, .form-select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--beige-dark);
+  border-radius: 10px;
+  background: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--black);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.form-select {
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%239B9590' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+.form-input:focus, .form-select:focus {
+  border-color: var(--brown);
+  box-shadow: 0 0 0 3px rgba(107, 79, 58, 0.08);
+}
+
+.form-hint {
+  font-size: 11px;
+  color: var(--brown-light);
+  line-height: 1.5;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+/* ── GOAL ALERTS ── */
+.goal-alert {
+  padding: 14px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  margin-top: 12px;
+}
+
+.goal-alert strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.goal-alert.warning {
+  background: #FFF8EE;
+  border: 1.5px solid #E8C36A;
+  color: #8B6914;
+}
+
+.goal-alert.danger {
+  background: var(--red-light);
+  border: 1.5px solid var(--red);
+  color: #9B2020;
+}
+
+.goal-alert.info {
+  background: var(--green-light);
+  border: 1.5px solid rgba(45, 140, 78, 0.3);
+  color: var(--green-dark);
+}
+
+.goal-alert .suggested {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.6);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+/* ── TOGGLE BUTTONS ── */
+.toggle-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.toggle-btn {
+  flex: 1;
+  min-width: 100px;
+  padding: 12px 16px;
+  border: 1.5px solid var(--beige-dark);
+  border-radius: 10px;
+  background: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.toggle-btn:hover { border-color: var(--brown-light); color: var(--brown); }
+
+.toggle-btn.active {
+  background: var(--brown);
+  color: var(--white);
+  border-color: var(--brown);
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(107, 79, 58, 0.25);
+}
+
+/* ── MEAL COUNT & PLAN MODE BUTTONS ── */
+.meal-count-group, .plan-mode-group {
+  display: flex;
+  gap: 8px;
+}
+
+.meal-count-btn, .plan-mode-btn {
+  flex: 1;
+  padding: 14px 12px;
+  border: 1.5px solid var(--beige-dark);
+  border-radius: 12px;
+  background: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.meal-count-btn:hover, .plan-mode-btn:hover {
+  border-color: var(--brown-light);
+  color: var(--brown);
+}
+
+.meal-count-btn.active, .plan-mode-btn.active, .plan-duration-btn.active {
+  background: var(--brown);
+  color: var(--white);
+  border-color: var(--brown);
+  font-weight: 600;
+}
+
+.plan-duration-btn {
+  flex: 1;
+  padding: 14px 12px;
+  border: 1.5px solid var(--beige-dark);
+  border-radius: 12px;
+  background: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.plan-duration-btn:hover {
+  border-color: var(--brown-light);
+  color: var(--brown);
+}
+
+/* ── GOAL CARDS ── */
+.goal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.goal-card {
+  padding: 18px 14px;
+  border: 1.5px solid var(--beige-dark);
+  border-radius: 14px;
+  background: var(--white);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.goal-card:hover { border-color: var(--brown-light); }
+
+.goal-card.active {
+  border-color: var(--brown);
+  background: var(--brown);
+  color: var(--white);
+}
+
+.goal-card .goal-icon { font-size: 24px; margin-bottom: 6px; }
+.goal-card .goal-label { font-size: 13px; font-weight: 600; }
+.goal-card .goal-desc { font-size: 10px; margin-top: 4px; opacity: 0.7; }
+
+/* ── RANGE INPUT ── */
+.range-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.range-wrap input[type="range"] {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: var(--beige-dark);
+  border-radius: 3px;
+  outline: none;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.range-wrap input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--brown);
+  cursor: pointer;
+  border: 3px solid var(--white);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  margin-top: 0;
+}
+
+.range-wrap input[type="range"]::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--brown);
+  cursor: pointer;
+  border: 3px solid var(--white);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.range-wrap input[type="range"]::-moz-range-track {
+  height: 6px;
+  background: var(--beige-dark);
+  border-radius: 3px;
+  border: none;
+}
+
+.range-val {
+  min-width: 28px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--brown-dark);
+}
+
+/* ── ACTIVITY ── */
+.activities-wrap { margin-top: 12px; }
+
+.activity-item {
+  position: relative;
+  background: var(--white);
+  border: 1px solid var(--beige-dark);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 10px;
+}
+
+.activity-remove {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: var(--red-light);
+  color: var(--red);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-activity-btn {
+  width: 100%;
+  padding: 14px;
+  border: 2px dashed var(--beige-dark);
+  border-radius: 12px;
+  background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brown);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-activity-btn:hover {
+  border-color: var(--brown);
+  background: var(--white);
+}
+
+/* ── ALLERGIES & DIET ── */
+.allergy-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.allergy-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--beige-dark);
+  border-radius: 10px;
+  background: var(--white);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.allergy-label:has(input:checked) {
+  border-color: var(--red);
+  background: var(--red-light);
+}
+
+.allergy-label input { accent-color: var(--red); }
+
+.diet-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.diet-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--beige-dark);
+  border-radius: 10px;
+  background: var(--white);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.diet-label:has(input:checked) {
+  border-color: var(--brown);
+  background: rgba(107, 79, 58, 0.05);
+}
+
+.diet-label input { accent-color: var(--brown); }
+
+/* ── EXCLUDED FOODS ── */
+.excluded-search-wrap {
+  margin-bottom: 10px;
+}
+
+.excluded-list {
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+.exclude-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border: 1px solid var(--beige-dark);
+  border-radius: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  background: var(--white);
+  transition: all 0.15s;
+}
+
+.exclude-item.active {
+  background: var(--red-light);
+  border-color: var(--red);
+  text-decoration: line-through;
+  color: var(--red);
+}
+
+.exclude-item input { display: none; }
+
+/* ── STICKY RECAP BAR ── */
+.recap-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.92);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--beige-dark);
+  padding: 14px 16px;
+  margin: 0 -16px 20px;
+}
+
+.recap-title {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gray);
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.recap-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 8px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.recap-item { text-align: center; padding: 6px 4px; }
+
+.recap-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--brown-dark);
+  line-height: 1;
+}
+
+.recap-value.empty { color: var(--gray-light); }
+
+.recap-target {
+  font-size: 9px;
+  color: var(--gray);
+  margin-top: 2px;
+}
+
+.recap-label {
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--gray);
+  margin-top: 4px;
+}
+
+.recap-progress {
+  height: 3px;
+  background: var(--beige);
+  border-radius: 2px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.recap-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 0%;
+}
+
+.recap-fill.kcal { background: var(--brown); }
+.recap-fill.prot { background: var(--red); }
+.recap-fill.gluc { background: var(--gold); }
+.recap-fill.lip { background: var(--brown-light); }
+
+/* ── METABO RESULTS ── */
+.metabo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.metabo-card {
+  background: var(--white);
+  border: 1px solid var(--beige-dark);
+  border-radius: 14px;
+  padding: 16px 12px;
+  text-align: center;
+}
+
+.metabo-card.accent { border-color: var(--brown-light); }
+.metabo-card.highlight {
+  background: var(--brown);
+  border-color: var(--brown);
+  color: var(--white);
+}
+
+.metabo-card.highlight .metabo-label,
+.metabo-card.highlight .metabo-unit { color: rgba(255,255,255,0.7); }
+.metabo-card.highlight .metabo-value { color: var(--white); }
+
+.metabo-label { font-size: 10px; color: var(--gray); margin-bottom: 6px; font-weight: 500; }
+.metabo-value { font-size: 24px; font-weight: 700; color: var(--brown-dark); }
+.metabo-unit { font-size: 10px; color: var(--gray); margin-top: 2px; }
+
+.macro-summary {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.macro-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.macro-pill span { font-weight: 700; }
+.macro-pill.prot { background: var(--red-light); color: var(--red); }
+.macro-pill.gluc { background: #FFF8EE; color: #B8892A; }
+.macro-pill.lip { background: #F5EDE6; color: var(--brown); }
+
+/* ── DAY TABS (week plan) ── */
+.day-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 12px 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  position: sticky;
+  top: 95px; /* below recap bar */
+  z-index: 99;
+  background: var(--beige);
+}
+
+.day-tab {
+  flex: 1;
+  min-width: 44px;
+  padding: 10px 8px;
+  border: 1.5px solid var(--beige-dark);
+  border-radius: 10px;
+  background: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.day-tab:hover { border-color: var(--brown-light); color: var(--brown); }
+
+.day-tab.active {
+  background: var(--brown);
+  color: var(--white);
+  border-color: var(--brown);
+}
+
+.deficit-info {
+  text-align: center;
+  font-size: 12px;
+  color: var(--gray);
+  font-weight: 500;
+}
+
+/* ── MEAL CARDS ── */
+.meal-card {
+  background: var(--white);
+  border-radius: 20px;
+  padding: 28px 22px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(232, 224, 216, 0.6);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.meal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.meal-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--brown-dark);
+}
+
+.meal-kcal-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--brown);
+  background: var(--beige);
+  padding: 5px 14px;
+  border-radius: 20px;
+}
+
+.meal-time {
+  font-size: 11px;
+  color: var(--gray);
+  margin-bottom: 16px;
+}
+
+.meal-targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 22px;
+  padding: 14px 16px;
+  background: var(--cream);
+  border-radius: 12px;
+}
+
+.meal-targets-label {
+  width: 100%;
+  font-size: 10px;
+  color: var(--gray);
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.target-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--brown-dark);
+}
+
+.target-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.target-sep { color: var(--gray-light); font-weight: 300; }
+
+/* ── SLOTS ── */
+.slot { margin-bottom: 20px; }
+.slot:last-child { margin-bottom: 0; }
+
+.slot-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.slot-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+.slot-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brown-dark);
+}
+
+.slot-target-badge {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--gray);
+  background: var(--beige);
+  padding: 3px 10px;
+  border-radius: 10px;
+}
+
+/* ── FOOD SELECT ── */
+.food-select {
+  width: 100%;
+  padding: 14px 40px 14px 16px;
+  border: 1.5px solid var(--beige-dark);
+  border-radius: 12px;
+  background: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: var(--black);
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%239B9590' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.food-select:focus {
+  border-color: var(--brown);
+  box-shadow: 0 0 0 3px rgba(107, 79, 58, 0.08);
+}
+
+/* ── RESULT BOX ── */
+.result-box {
+  margin-top: 10px;
+  padding: 18px 16px;
+  background: var(--green-light);
+  border: 1.5px solid rgba(45, 140, 78, 0.15);
+  border-radius: 14px;
+  text-align: center;
+  animation: fadeSlideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.result-label { font-size: 10px; font-weight: 500; color: var(--green); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
+.result-quantity { font-size: 36px; font-weight: 700; color: var(--green-dark); line-height: 1; }
+.result-food-name { font-size: 14px; font-weight: 500; color: var(--brown-dark); margin-top: 4px; }
+.result-detail { font-size: 10px; color: var(--gray); margin-top: 8px; }
+
+.result-macros {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.rm-item {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.rm-kcal { background: var(--beige); color: var(--brown-dark); }
+.rm-prot { background: var(--red-light); color: var(--red); }
+.rm-gluc { background: #FFF8EE; color: #B8892A; }
+.rm-lip { background: #F5EDE6; color: var(--brown); }
+
+/* ── SWAP & REGEN BUTTONS ── */
+.swap-btn {
+  margin-top: 10px;
+  padding: 6px 16px;
+  border: 1px solid rgba(45, 140, 78, 0.3);
+  border-radius: 20px;
+  background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--green);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.swap-btn:hover { background: var(--green); color: var(--white); }
+
+.regen-meal-btn {
+  width: 100%;
+  margin-top: 16px;
+  padding: 10px;
+  border: 1.5px dashed var(--beige-dark);
+  border-radius: 10px;
+  background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--brown);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.regen-meal-btn:hover { border-color: var(--brown); background: var(--cream); }
+
+.regen-all-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: var(--brown);
+  color: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: background 0.2s;
+}
+
+.regen-all-btn:hover { background: var(--brown-dark); }
+
+/* ── LEGUMES BOX ── */
+.legumes-box {
+  padding: 16px;
+  background: var(--green-light);
+  border-radius: 12px;
+  border: 1px solid rgba(45, 140, 78, 0.12);
+}
+
+.legumes-title { font-size: 14px; font-weight: 700; color: var(--green); margin-bottom: 4px; }
+.legumes-text { font-size: 11px; color: var(--brown-light); line-height: 1.5; }
+
+/* ── NAV BUTTONS ── */
+.nav-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 16px 40px;
+}
+
+.nav-btn {
+  padding: 14px 28px;
+  border: none;
+  border-radius: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.nav-btn.prev {
+  background: var(--white);
+  color: var(--brown);
+  border: 1.5px solid var(--beige-dark);
+}
+
+.nav-btn.prev:hover { border-color: var(--brown); }
+
+.nav-btn.next {
+  background: var(--brown);
+  color: var(--white);
+}
+
+.nav-btn.next:hover { background: var(--brown-dark); }
+
+/* ── SUMMARY ── */
+.summary-section {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 1px solid var(--beige-dark);
+}
+
+.summary-section h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  color: var(--brown-dark);
+  margin-bottom: 14px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 13px;
+  border-bottom: 1px solid var(--beige);
+}
+
+.summary-row:last-child { border-bottom: none; }
+.summary-row span { color: var(--gray); }
+.summary-row strong { color: var(--brown-dark); }
+.summary-row.accent strong { color: var(--brown); font-size: 16px; }
+
+.summary-meal {
+  background: var(--white);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 10px;
+  border: 1px solid var(--beige-dark);
+}
+
+.summary-meal h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--brown-dark);
+  margin-bottom: 10px;
+}
+
+.summary-food {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  padding: 4px 0;
+  color: var(--black);
+}
+
+.slot-dot-small {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── EXPORT BUTTONS ── */
+.export-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-export {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-export.primary {
+  background: var(--brown);
+  color: var(--white);
+}
+
+.btn-export.primary:hover { background: var(--brown-dark); }
+
+.btn-export.secondary {
+  background: var(--white);
+  color: var(--brown);
+  border: 1.5px solid var(--beige-dark);
+}
+
+.btn-export.secondary:hover { border-color: var(--brown); }
+
+.save-info {
+  background: var(--green-light);
+  border: 1.5px solid rgba(45, 140, 78, 0.2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--green-dark);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.save-info strong { display: block; margin-bottom: 4px; }
+
+.copy-feedback {
+  text-align: center;
+  padding: 10px;
+  margin-top: 10px;
+  background: var(--green-light);
+  color: var(--green);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ── PRINT STYLES ── */
+@media print {
+  .app-header, .progress-wrap, .nav-bottom, .site-footer,
+  .export-actions, .save-info, .copy-feedback, .recap-bar { display: none !important; }
+
+  .step { display: block !important; max-width: 100%; padding: 0; }
+  .step:not([data-step="5"]) { display: none !important; }
+
+  body { background: white; }
+  .summary-section, .summary-meal { break-inside: avoid; }
+
+  #summaryContent::before {
+    content: 'Plan Alimentaire Personnalisé — AH Coaching';
+    display: block;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 700;
+    font-family: 'Playfair Display', serif;
+    color: #4A3628;
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #6B4F3A;
+  }
+}
+
+/* ── ERROR ── */
+.error-msg {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--red);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ── FOOTER ── */
+.site-footer {
+  text-align: center;
+  padding: 24px 16px 48px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.footer-divider { width: 40px; height: 2px; background: var(--gold); margin: 0 auto 16px; }
+.footer-coaches { font-size: 11px; font-weight: 500; color: var(--brown); margin-bottom: 4px; }
+.footer-note { font-size: 9px; color: var(--gray); }
+
+/* PDF styles are inline in app.js for html2pdf compatibility */
+
+/* ── ANIMATIONS ── */
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 500px) {
+  .app-header h1 { font-size: 24px; }
+  .app-header h1 span { font-size: 18px; }
+  .step-title { font-size: 20px; }
+  .metabo-grid { grid-template-columns: 1fr; }
+  .metabo-value { font-size: 20px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .goal-grid { grid-template-columns: 1fr; }
+  .allergy-grid { grid-template-columns: 1fr; }
+  .meal-name { font-size: 18px; }
+  .recap-value { font-size: 19px; }
+  .result-quantity { font-size: 32px; }
+  .meal-card { padding: 22px 16px; }
+  .nav-btn { padding: 12px 20px; font-size: 13px; }
+  .export-actions { flex-direction: column; }
+}

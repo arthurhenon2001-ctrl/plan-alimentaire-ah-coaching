@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Plan Alimentaire — AH Coaching</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="app-header">
+  <div class="app-badge">AH Coaching</div>
+  <h1>Plan Alimentaire<span>100% Personnalisé</span></h1>
+  <p class="app-subtitle">Calcule ton métabolisme, configure tes préférences,<br>et obtiens ton plan alimentaire sur-mesure.</p>
+</header>
+
+<!-- ── PROGRESS ── -->
+<div class="progress-wrap">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="step-indicator" id="stepIndicator">Étape 1 / 6</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- ÉTAPE 0 — PROFIL & MENSURATIONS                                  -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="step active" data-step="0">
+  <h2 class="step-title">Ton profil</h2>
+  <p class="step-desc">Ces informations permettent de calculer ton métabolisme avec précision.</p>
+
+  <div class="form-section">
+    <div class="form-section-title">Informations de base</div>
+    <div class="form-group full-width" style="margin-bottom:14px">
+      <label>Sexe</label>
+      <div class="toggle-group">
+        <button class="toggle-btn" data-field="sex" data-value="female">Femme</button>
+        <button class="toggle-btn" data-field="sex" data-value="male">Homme</button>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Âge</label>
+        <input type="number" class="form-input" id="age" min="14" max="100" placeholder="ex: 28">
+      </div>
+      <div class="form-group">
+        <label>Poids (kg)</label>
+        <input type="number" class="form-input" id="weight" min="30" max="300" step="0.1" placeholder="ex: 65">
+      </div>
+      <div class="form-group">
+        <label>Taille (cm)</label>
+        <input type="number" class="form-input" id="height" min="100" max="250" placeholder="ex: 170">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Mensurations (optionnel — pour plus de précision)</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Tour de taille (cm)</label>
+        <input type="number" class="form-input" id="waist" min="40" max="200" placeholder="Optionnel">
+      </div>
+      <div class="form-group">
+        <label>Tour de cou (cm)</label>
+        <input type="number" class="form-input" id="neck" min="20" max="80" placeholder="Optionnel">
+      </div>
+      <div class="form-group" id="hipsGroup">
+        <label>Tour de hanches (cm)</label>
+        <input type="number" class="form-input" id="hips" min="50" max="200" placeholder="Optionnel">
+      </div>
+      <div class="form-group">
+        <label>Taux de masse grasse connu (%)</label>
+        <input type="number" class="form-input" id="bodyFatKnown" min="3" max="60" step="0.1" placeholder="Si tu le connais">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Conditions particulières</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Thyroïde</label>
+        <div class="toggle-group">
+          <button class="toggle-btn" data-field="thyroid" data-value="none">Normal</button>
+          <button class="toggle-btn" data-field="thyroid" data-value="hypo">Hypo</button>
+          <button class="toggle-btn" data-field="thyroid" data-value="hyper">Hyper</button>
+        </div>
+      </div>
+      <div class="form-group" id="menopauseGroup">
+        <label>Ménopause</label>
+        <div class="toggle-group">
+          <button class="toggle-btn" data-field="menopause" data-value="no">Non</button>
+          <button class="toggle-btn" data-field="menopause" data-value="yes">Oui</button>
+        </div>
+      </div>
+      <div class="form-group full-width">
+        <label>Historique régimes yo-yo</label>
+        <div class="toggle-group">
+          <button class="toggle-btn" data-field="yoyo" data-value="none">Aucun</button>
+          <button class="toggle-btn" data-field="yoyo" data-value="some">Quelques-uns</button>
+          <button class="toggle-btn" data-field="yoyo" data-value="many">Beaucoup</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- ÉTAPE 1 — ACTIVITÉ QUOTIDIENNE & SPORT                           -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="step" data-step="1">
+  <h2 class="step-title">Ton activité</h2>
+  <p class="step-desc">Pas quotidiens, type de travail, sport… tout compte pour ton métabolisme.</p>
+
+  <div class="form-section">
+    <div class="form-section-title">Activité quotidienne</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Pas/jour (jours travaillés)</label>
+        <input type="number" class="form-input" id="stepsWork" min="0" max="50000" step="500" placeholder="ex: 6000">
+      </div>
+      <div class="form-group">
+        <label>Pas/jour (jours off)</label>
+        <input type="number" class="form-input" id="stepsOff" min="0" max="50000" step="500" placeholder="ex: 4000">
+      </div>
+      <div class="form-group">
+        <label>Type de travail</label>
+        <select class="form-select" id="jobType">
+          <option value="sedentary">Sédentaire (bureau)</option>
+          <option value="standing">Debout (commerce)</option>
+          <option value="mix">Mixte (debout/assis)</option>
+          <option value="lightManual">Manuel léger</option>
+          <option value="heavyManual">Manuel lourd</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Heures assis/jour (total)</label>
+        <input type="number" class="form-input" id="sittingHours" min="0" max="20" placeholder="ex: 10">
+        <span class="form-hint">Compte TOUT : travail, repas, voiture, transports, canapé/TV, téléphone… La plupart des gens sous-estiment et sont à 12-16h/jour.</span>
+      </div>
+      <div class="form-group">
+        <label>Jours travaillés/semaine</label>
+        <input type="number" class="form-input" id="workDays" min="0" max="7" placeholder="ex: 5">
+      </div>
+      <div class="form-group">
+        <label>Heures de travail/jour</label>
+        <input type="number" class="form-input" id="workHours" min="0" max="16" placeholder="ex: 8">
+      </div>
+      <div class="form-group">
+        <label>Allure de marche</label>
+        <select class="form-select" id="walkPace">
+          <option value="slow">Lente</option>
+          <option value="normal" selected>Normale</option>
+          <option value="fast">Rapide</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Micro-pauses actives</label>
+        <select class="form-select" id="microBreaks">
+          <option value="never">Jamais</option>
+          <option value="1-2">1-2x/jour</option>
+          <option value="3-5">3-5x/jour</option>
+          <option value="6+">6+/jour</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Dénivelé quotidien</label>
+        <select class="form-select" id="elevation">
+          <option value="never">Aucun / plat</option>
+          <option value="sometimes">Parfois (escaliers)</option>
+          <option value="often">Souvent (collines)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Marche transport (min/jour)</label>
+        <input type="number" class="form-input" id="walkTransport" min="0" max="120" placeholder="ex: 15">
+      </div>
+      <div class="form-group">
+        <label>Vélo transport (min/jour)</label>
+        <input type="number" class="form-input" id="bikeTransport" min="0" max="120" placeholder="ex: 0">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Activités sportives</div>
+    <div id="activities" class="activities-wrap"></div>
+    <button class="add-activity-btn" onclick="addActivity()">+ Ajouter une activité</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- ÉTAPE 2 — OBJECTIF & RÉCUPÉRATION                                -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="step" data-step="2">
+  <h2 class="step-title">Ton objectif</h2>
+  <p class="step-desc">Choisis ton objectif et renseigne tes habitudes de récupération.</p>
+
+  <div class="form-section">
+    <div class="form-section-title">Objectif principal</div>
+    <div class="goal-grid">
+      <button class="goal-card" data-value="cut" onclick="selectGoal(this)">
+        <div class="goal-icon">🔥</div>
+        <div class="goal-label">Perte de poids</div>
+        <div class="goal-desc">Déficit calorique</div>
+      </button>
+      <button class="goal-card" data-value="maintain" onclick="selectGoal(this)">
+        <div class="goal-icon">⚖️</div>
+        <div class="goal-label">Maintien</div>
+        <div class="goal-desc">Stabiliser</div>
+      </button>
+      <button class="goal-card" data-value="bulk" onclick="selectGoal(this)">
+        <div class="goal-icon">💪</div>
+        <div class="goal-label">Prise de masse</div>
+        <div class="goal-desc">Surplus contrôlé</div>
+      </button>
+      <button class="goal-card" data-value="recomp" onclick="selectGoal(this)">
+        <div class="goal-icon">🔄</div>
+        <div class="goal-label">Recomposition</div>
+        <div class="goal-desc">Perdre du gras, gagner du muscle</div>
+      </button>
+    </div>
+  </div>
+
+  <div class="form-section" id="goalDetailsGroup">
+    <div class="form-section-title">Détails de ton objectif</div>
+    <div class="form-grid">
+      <div class="form-group" id="targetWeightGroup">
+        <label id="targetWeightLabel">Poids cible (kg)</label>
+        <input type="number" class="form-input" id="targetWeight" min="30" max="200" step="0.1" placeholder="ex: 58">
+        <span class="form-hint" id="targetWeightHint">Le poids que tu vises à atteindre.</span>
+      </div>
+      <div class="form-group" id="weeksGroup">
+        <label>Durée prévue</label>
+        <select class="form-select" id="weeks">
+          <option value="4">4 semaines (1 mois)</option>
+          <option value="8">8 semaines (2 mois)</option>
+          <option value="12" selected>12 semaines (3 mois)</option>
+          <option value="16">16 semaines (4 mois)</option>
+          <option value="24">24 semaines (6 mois)</option>
+          <option value="52">52 semaines (1 an)</option>
+        </select>
+      </div>
+    </div>
+    <!-- Alertes de sécurité -->
+    <div id="goalAlerts"></div>
+  </div>
+
+  <!-- Deficit is now auto-calculated from target weight + duration -->
+
+  <div class="form-section">
+    <div class="form-section-title">Récupération & mode de vie</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Heures de sommeil</label>
+        <input type="number" class="form-input" id="sleepHours" min="3" max="12" step="0.5" placeholder="ex: 7">
+      </div>
+      <div class="form-group">
+        <label>Qualité du sommeil (1-10)</label>
+        <div class="range-wrap">
+          <input type="range" id="sleepQuality" min="1" max="10" value="7">
+          <span class="range-val" id="sleepQualityVal">7</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Niveau de stress (1-10)</label>
+        <div class="range-wrap">
+          <input type="range" id="stress" min="1" max="10" value="4">
+          <span class="range-val" id="stressVal">4</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Eau (L/jour)</label>
+        <input type="number" class="form-input" id="water" min="0" max="6" step="0.1" placeholder="ex: 2">
+      </div>
+      <div class="form-group">
+        <label>Consommation d'alcool</label>
+        <select class="form-select" id="alcohol">
+          <option value="none">Aucune</option>
+          <option value="occasional">Occasionnelle</option>
+          <option value="moderate">Modérée (2-3x/sem)</option>
+          <option value="frequent">Fréquente</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Type d'alimentation</label>
+        <select class="form-select" id="dietType">
+          <option value="mixed">Mixte / équilibrée</option>
+          <option value="highProtein">Riche en protéines</option>
+          <option value="vegetarian">Végétarienne</option>
+          <option value="vegan">Végane</option>
+          <option value="keto">Keto / low carb</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- ÉTAPE 3 — PRÉFÉRENCES ALIMENTAIRES & CONFIG PLAN                  -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="step" data-step="3">
+  <h2 class="step-title">Tes préférences</h2>
+  <p class="step-desc">Allergies, régime, aliments que tu n'aimes pas, et configuration de ton plan.</p>
+
+  <div class="form-section">
+    <div class="form-section-title">Allergies / Intolérances</div>
+    <div class="allergy-grid">
+      <label class="allergy-label"><input type="checkbox" class="allergy-check" value="gluten"> Sans gluten</label>
+      <label class="allergy-label"><input type="checkbox" class="allergy-check" value="lactose"> Sans lactose</label>
+      <label class="allergy-label"><input type="checkbox" class="allergy-check" value="fruits_a_coque"> Sans fruits à coque</label>
+      <label class="allergy-label"><input type="checkbox" class="allergy-check" value="arachide"> Sans arachide</label>
+      <label class="allergy-label"><input type="checkbox" class="allergy-check" value="crustace"> Sans crustacés</label>
+      <label class="allergy-label"><input type="checkbox" class="allergy-check" value="poisson"> Sans poisson</label>
+      <label class="allergy-label"><input type="checkbox" class="allergy-check" value="porc"> Sans porc</label>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Régime alimentaire</div>
+    <div class="diet-group">
+      <label class="diet-label"><input type="radio" name="diet" class="diet-radio" value="mixed" checked> Omnivore (tout)</label>
+      <label class="diet-label"><input type="radio" name="diet" class="diet-radio" value="vegetarian"> Végétarien</label>
+      <label class="diet-label"><input type="radio" name="diet" class="diet-radio" value="vegan"> Végan</label>
+      <label class="diet-label"><input type="radio" name="diet" class="diet-radio" value="pescetarian"> Pescétarien</label>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Aliments que tu n'aimes pas</div>
+    <div id="excludedFoodsList"></div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Configuration du plan</div>
+
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Nombre de repas par jour</label>
+      <div class="meal-count-group">
+        <button class="meal-count-btn" data-value="2">2 repas</button>
+        <button class="meal-count-btn" data-value="3">3 repas</button>
+        <button class="meal-count-btn" data-value="4">4 repas</button>
+        <button class="meal-count-btn" data-value="5">5 repas</button>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Mode du plan</label>
+      <div class="plan-mode-group">
+        <button class="plan-mode-btn" data-value="equivalence">Équivalences (flexible)</button>
+        <button class="plan-mode-btn" data-value="fixed">Plan fixe (auto)</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Durée du plan</label>
+      <div class="plan-mode-group">
+        <button class="plan-duration-btn active" data-value="1">1 jour type</button>
+        <button class="plan-duration-btn" data-value="7">Semaine complète (7 jours variés)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- ÉTAPE 4 — PLAN ALIMENTAIRE                                        -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="step" data-step="4">
+  <h2 class="step-title">Ton plan alimentaire</h2>
+  <p class="step-desc">Voici ton plan personnalisé basé sur tes résultats métaboliques.</p>
+
+  <!-- Résultats métaboliques résumé -->
+  <div id="metaboSummary"></div>
+
+  <!-- ── STICKY RECAP BAR ── -->
+  <div class="recap-bar" id="recapBar">
+    <div class="recap-title">Récapitulatif du jour</div>
+    <div class="recap-grid">
+      <div class="recap-item">
+        <div class="recap-value empty" id="recap-kcal">0</div>
+        <div class="recap-target" id="target-kcal">/ —</div>
+        <div class="recap-label">Calories</div>
+        <div class="recap-progress"><div class="recap-fill kcal" id="bar-kcal"></div></div>
+      </div>
+      <div class="recap-item">
+        <div class="recap-value empty" id="recap-prot">0</div>
+        <div class="recap-target" id="target-prot">/ —</div>
+        <div class="recap-label">Protéines</div>
+        <div class="recap-progress"><div class="recap-fill prot" id="bar-prot"></div></div>
+      </div>
+      <div class="recap-item">
+        <div class="recap-value empty" id="recap-gluc">0</div>
+        <div class="recap-target" id="target-gluc">/ —</div>
+        <div class="recap-label">Glucides</div>
+        <div class="recap-progress"><div class="recap-fill gluc" id="bar-gluc"></div></div>
+      </div>
+      <div class="recap-item">
+        <div class="recap-value empty" id="recap-lip">0</div>
+        <div class="recap-target" id="target-lip">/ —</div>
+        <div class="recap-label">Lipides</div>
+        <div class="recap-progress"><div class="recap-fill lip" id="bar-lip"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bouton régénérer tout (fixed mode) -->
+  <div id="regenAllWrap" style="display:none">
+    <button class="regen-all-btn" onclick="regenerateAll()">↻ Régénérer tout le plan</button>
+  </div>
+
+  <!-- Plan content -->
+  <div id="planContent"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- ÉTAPE 5 — RÉSUMÉ & EXPORT                                        -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="step" data-step="5">
+  <h2 class="step-title">Récapitulatif</h2>
+  <p class="step-desc">Ton plan complet. Sauvegarde-le pour le garder.</p>
+
+  <div class="save-info">
+    <strong>Tes données sont sauvegardées automatiquement</strong> dans ton navigateur. Tu peux fermer la page et revenir plus tard, tout sera conservé.
+  </div>
+
+  <div id="summaryContent"></div>
+
+  <div class="export-actions">
+    <button class="btn-export primary" onclick="printPlan()">Imprimer / Sauvegarder en PDF</button>
+    <button class="btn-export secondary" onclick="copyPlanText()">Copier le plan (texte)</button>
+  </div>
+  <div id="copyFeedback" class="copy-feedback" style="display:none">Plan copié dans le presse-papier !</div>
+  <div class="export-actions" style="margin-top:8px">
+    <button class="btn-export secondary" onclick="resetAll()">Recommencer</button>
+  </div>
+</div>
+
+<!-- ── NAVIGATION ── -->
+<div class="nav-bottom">
+  <button class="nav-btn prev" id="btnPrev" onclick="prevStep()" style="visibility:hidden">← Retour</button>
+  <button class="nav-btn next" id="btnNext" onclick="nextStep()">Suivant →</button>
+</div>
+
+<!-- ── FOOTER ── -->
+<div class="site-footer">
+  <div class="footer-divider"></div>
+  <p class="footer-coaches">Arthur Hénon · Coach Sportif &nbsp;|&nbsp; Mathilde Vion · Ingénieur Nutrition</p>
+  <p class="footer-note">Document confidentiel — 2026</p>
+</div>
+
+<!-- ── SCRIPTS ── -->
+<script src="js/nutrition-db.js"></script>
+<script src="js/calculator.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/meal-planner.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+// Goal card selection
+function selectGoal(el) {
+  document.querySelectorAll('.goal-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  state.goal = el.dataset.value;
+  // Update target weight label based on goal
+  updateGoalLabels();
+  checkGoalSafety();
+  Storage.save(state);
+}
+
+function updateGoalLabels() {
+  const label = document.getElementById('targetWeightLabel');
+  const hint = document.getElementById('targetWeightHint');
+  const goalGroup = document.getElementById('goalDetailsGroup');
+  if (state.goal === 'maintain') {
+    if (goalGroup) goalGroup.style.display = 'none';
+  } else {
+    if (goalGroup) goalGroup.style.display = '';
+    if (label) label.textContent = state.goal === 'bulk' ? 'Poids cible (kg) — prise de masse' : 'Poids cible (kg)';
+    if (hint) hint.textContent = state.goal === 'bulk'
+      ? 'Le poids que tu vises à atteindre en prise de masse.'
+      : 'Le poids que tu vises à atteindre.';
+  }
+}
+
+// Restore goal on load
+document.addEventListener('DOMContentLoaded', () => {
+  // Restore goal cards
+  document.querySelectorAll('.goal-card').forEach(c => {
+    if (c.dataset.value === state.goal) c.classList.add('active');
+  });
+  // Update goal labels
+  updateGoalLabels();
+  // Hide hips if male
+  const hipsGroup = document.getElementById('hipsGroup');
+  if (hipsGroup && state.sex === 'male') hipsGroup.style.display = 'none';
+  const menopauseGroup = document.getElementById('menopauseGroup');
+  if (menopauseGroup && state.sex === 'male') menopauseGroup.style.display = 'none';
+
+  // No need for MutationObserver — recap bar is now inside step 4
+});
+</script>
+
+</body>
+</html>
