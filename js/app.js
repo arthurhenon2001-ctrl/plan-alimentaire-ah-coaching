@@ -92,6 +92,12 @@ function goToStep(n) {
   const step = document.querySelector(`[data-step="${n}"]`);
   if (step) step.classList.add('active');
 
+  // Scroll vers le titre du step (pas tout en haut)
+  const title = step?.querySelector('.step-title');
+  if (title) {
+    setTimeout(() => title.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  }
+
   // Progress bar
   const pct = (n / TOTAL_STEPS) * 100;
   document.getElementById('progressFill').style.width = pct + '%';
