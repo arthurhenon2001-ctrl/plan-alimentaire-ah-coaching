@@ -56,7 +56,16 @@ const state = {
   results: null,
   meals: null,
   weekMeals: null, // pour le plan semaine
+  _currentDay: 0,  // jour affiché en mode semaine
 };
+
+// Getter: retourne les repas du jour actuel (semaine ou jour type)
+function getCurrentMeals() {
+  if (state.planDays === 7 && state.weekMeals) {
+    return state.weekMeals[state._currentDay || 0];
+  }
+  return state.meals;
+}
 
 const TOTAL_STEPS = 5; // 0-based: 0=profil, 1=activité, 2=objectif, 3=préférences+config, 4=plan, 5=résumé/export
 let activityCounter = 0;
@@ -129,7 +138,30 @@ function goToStep(n) {
 }
 
 function nextStep() {
+  // Validation avant de passer à l'étape suivante
+  if (state.currentStep === 0) {
+    const age = parseInt(document.getElementById('age')?.value);
+    const weight = parseFloat(document.getElementById('weight')?.value);
+    const height = parseFloat(document.getElementById('height')?.value);
+    if (!age || !weight || !height) {
+      showToast('Remplis au minimum ton âge, poids et taille pour continuer.');
+      return;
+    }
+  }
   if (state.currentStep <= TOTAL_STEPS) goToStep(state.currentStep + 1);
+}
+
+function showToast(msg) {
+  let toast = document.getElementById('appToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'appToast';
+    toast.className = 'app-toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.classList.add('visible');
+  setTimeout(() => toast.classList.remove('visible'), 4000);
 }
 
 function prevStep() {
@@ -872,10 +904,8 @@ function updateMealSlotDisplays(mealIndex) {
  * Skip/unskip un slot et redistribue les macros sur les autres slots du repas
  */
 function toggleSkipSlot(mealIndex, slotIndex) {
-  const meals = state.planDays === 7 && state.weekMeals
-    ? state.weekMeals[state._currentDay || 0]
-    : state.meals;
-
+  const meals = getCurrentMeals();
+  if (!meals || !meals[mealIndex]) return;
   const meal = meals[mealIndex];
   const slot = meal.slots[slotIndex];
   slot.skipped = !slot.skipped;
@@ -918,73 +948,48 @@ function toggleSkipSlot(mealIndex, slotIndex) {
 }
 
 /**
- * Redistribue les macros d'un repas quand des slots sont skippés
- * Les glucides du fruit vont sur le féculent, les lipides vont sur la protéine, etc.
+ * Redistribue les macros d'un repas quand des slots sont skippés.
+ * Recalcule TOUT depuis les targets originaux du repas pour éviter les dérives.
  */
 function redistributeMealMacros(meal) {
-  const originalProt = meal.macroDisplay.prot;
-  const originalGluc = meal.macroDisplay.gluc;
-  const originalLip = meal.macroDisplay.lip;
+  // D'abord, reset les targets depuis les originaux du repas
+  const totalProt = meal.macroDisplay.prot;
+  const totalGluc = meal.macroDisplay.gluc;
+  const totalLip = meal.macroDisplay.lip;
 
-  // Collecter les macros des slots skippés
-  let freedGluc = 0, freedLip = 0, freedProt = 0;
+  // Compter les slots actifs par macro
+  const activeByMacro = { prot: [], gluc: [], lip: [] };
+  const skippedByMacro = { prot: 0, gluc: 0, lip: 0 };
 
   meal.slots.forEach(slot => {
-    if (slot.skipped && !slot.isVeg) {
-      // Le target de ce slot va être redistribué
-      if (slot.macro === 'gluc') freedGluc += slot.target;
-      if (slot.macro === 'lip') freedLip += slot.target;
-      if (slot.macro === 'prot') freedProt += slot.target;
+    if (slot.isVeg) return;
+    if (slot.skipped) {
+      if (slot.macro) skippedByMacro[slot.macro] += slot._originalTarget || slot.target;
+    } else {
+      if (slot.macro) activeByMacro[slot.macro].push(slot);
     }
   });
 
-  // Redistribuer sur les slots actifs du même macro
-  meal.slots.forEach(slot => {
-    if (slot.skipped || slot.isVeg) return;
+  // Redistribuer chaque macro sur les slots actifs
+  ['prot', 'gluc', 'lip'].forEach(macro => {
+    const total = macro === 'prot' ? totalProt : macro === 'gluc' ? totalGluc : totalLip;
+    const active = activeByMacro[macro];
 
-    if (slot.macro === 'gluc' && freedGluc > 0) {
-      // Compter combien de slots glucides actifs restent
-      const activeGluc = meal.slots.filter(s => !s.skipped && !s.isVeg && s.macro === 'gluc');
-      if (activeGluc.length > 0) {
-        slot.target += Math.round(freedGluc / activeGluc.length);
-      }
-    }
-    if (slot.macro === 'lip' && freedLip > 0) {
-      const activeLip = meal.slots.filter(s => !s.skipped && !s.isVeg && s.macro === 'lip');
-      if (activeLip.length > 0) {
-        slot.target += Math.round(freedLip / activeLip.length);
-      }
-    }
-    if (slot.macro === 'prot' && freedProt > 0) {
-      const activeProt = meal.slots.filter(s => !s.skipped && !s.isVeg && s.macro === 'prot');
-      if (activeProt.length > 0) {
-        slot.target += Math.round(freedProt / activeProt.length);
+    if (active.length > 0) {
+      const perSlot = Math.round(total / active.length);
+      active.forEach(slot => { slot.target = perSlot; });
+    } else {
+      // Tous les slots de ce macro sont skippés → convertir en calories sur un autre macro
+      const kcalFreed = macro === 'lip' ? total * 9 : total * 4;
+      // Préférer les glucides, sinon les lipides
+      const fallbackMacro = macro === 'gluc' ? 'lip' : 'gluc';
+      const fallbackSlots = activeByMacro[fallbackMacro];
+      if (fallbackSlots.length > 0) {
+        const extraPerSlot = Math.round((kcalFreed / (fallbackMacro === 'lip' ? 9 : 4)) / fallbackSlots.length);
+        fallbackSlots.forEach(slot => { slot.target += extraPerSlot; });
       }
     }
   });
-
-  // Si TOUS les slots d'un macro sont skippés, redistribuer les calories équivalentes
-  // sur les autres macros (par ex: pas de fruit = plus de féculent OU plus de lipides)
-  const hasActiveGluc = meal.slots.some(s => !s.skipped && !s.isVeg && s.macro === 'gluc');
-  const hasActiveLip = meal.slots.some(s => !s.skipped && !s.isVeg && s.macro === 'lip');
-
-  if (!hasActiveGluc && freedGluc > 0) {
-    // Convertir les glucides en lipides (4kcal/g gluc → 9kcal/g lip)
-    const kcalFromGluc = freedGluc * 4;
-    const extraLip = Math.round(kcalFromGluc / 9);
-    meal.slots.forEach(s => {
-      if (!s.skipped && !s.isVeg && s.macro === 'lip') s.target += extraLip;
-    });
-  }
-
-  if (!hasActiveLip && freedLip > 0) {
-    // Convertir les lipides en glucides
-    const kcalFromLip = freedLip * 9;
-    const extraGluc = Math.round(kcalFromLip / 4);
-    meal.slots.forEach(s => {
-      if (!s.skipped && !s.isVeg && s.macro === 'gluc') s.target += extraGluc;
-    });
-  }
 }
 
 function _reRender(constraints) {
@@ -1000,7 +1005,11 @@ function _reRender(constraints) {
 }
 
 function swapFood(mealIndex, slotIndex) {
-  const slot = state.meals[mealIndex].slots[slotIndex];
+  const meals = getCurrentMeals();
+  if (!meals || !meals[mealIndex]) return;
+  const meal = meals[mealIndex];
+  const slot = meal.slots[slotIndex];
+  if (!slot) return;
   const oldId = slot.selectedFood ? slot.selectedFood.id : null;
   const constraints = {
     allergies: state.allergies,
@@ -1008,14 +1017,15 @@ function swapFood(mealIndex, slotIndex) {
     excludedIds: state.excludedFoods,
   };
   MealPlanner.regenerateSlot(slot, constraints, oldId);
-  // Re-solve quantities after swap
-  const activeSlots = state.meals[mealIndex].slots.filter(s => !s.isVeg && !s.skipped && s.selectedFood);
-  MealPlanner._solveQuantities(activeSlots, state.meals[mealIndex]);
+  const activeSlots = meal.slots.filter(s => !s.isVeg && !s.skipped && s.selectedFood);
+  MealPlanner._solveQuantities(activeSlots, meal);
   _reRender(constraints);
 }
 
 function regenerateMeal(mealIndex) {
-  const meal = state.meals[mealIndex];
+  const meals = getCurrentMeals();
+  if (!meals || !meals[mealIndex]) return;
+  const meal = meals[mealIndex];
   const constraints = {
     allergies: state.allergies,
     diet: state.diet,

@@ -47,15 +47,15 @@
     <div class="form-grid">
       <div class="form-group">
         <label>Âge</label>
-        <input type="number" class="form-input" id="age" min="14" max="100" placeholder="ex: 28">
+        <input type="number" inputmode="decimal" class="form-input" id="age" min="14" max="100" placeholder="ex: 28">
       </div>
       <div class="form-group">
         <label>Poids (kg)</label>
-        <input type="number" class="form-input" id="weight" min="30" max="300" step="0.1" placeholder="ex: 65">
+        <input type="number" inputmode="decimal" class="form-input" id="weight" min="30" max="300" step="0.1" placeholder="ex: 65">
       </div>
       <div class="form-group">
         <label>Taille (cm)</label>
-        <input type="number" class="form-input" id="height" min="100" max="250" placeholder="ex: 170">
+        <input type="number" inputmode="decimal" class="form-input" id="height" min="100" max="250" placeholder="ex: 170">
       </div>
     </div>
   </div>
@@ -65,19 +65,19 @@
     <div class="form-grid">
       <div class="form-group">
         <label>Tour de taille (cm)</label>
-        <input type="number" class="form-input" id="waist" min="40" max="200" placeholder="Optionnel">
+        <input type="number" inputmode="decimal" class="form-input" id="waist" min="40" max="200" placeholder="Optionnel">
       </div>
       <div class="form-group">
         <label>Tour de cou (cm)</label>
-        <input type="number" class="form-input" id="neck" min="20" max="80" placeholder="Optionnel">
+        <input type="number" inputmode="decimal" class="form-input" id="neck" min="20" max="80" placeholder="Optionnel">
       </div>
       <div class="form-group" id="hipsGroup">
         <label>Tour de hanches (cm)</label>
-        <input type="number" class="form-input" id="hips" min="50" max="200" placeholder="Optionnel">
+        <input type="number" inputmode="decimal" class="form-input" id="hips" min="50" max="200" placeholder="Optionnel">
       </div>
       <div class="form-group">
         <label>Taux de masse grasse connu (%)</label>
-        <input type="number" class="form-input" id="bodyFatKnown" min="3" max="60" step="0.1" placeholder="Si tu le connais">
+        <input type="number" inputmode="decimal" class="form-input" id="bodyFatKnown" min="3" max="60" step="0.1" placeholder="Si tu le connais">
       </div>
     </div>
   </div>
@@ -124,11 +124,11 @@
     <div class="form-grid">
       <div class="form-group">
         <label>Pas/jour (jours travaillés)</label>
-        <input type="number" class="form-input" id="stepsWork" min="0" max="50000" step="500" placeholder="ex: 6000">
+        <input type="number" inputmode="decimal" class="form-input" id="stepsWork" min="0" max="50000" step="500" placeholder="ex: 6000">
       </div>
       <div class="form-group">
         <label>Pas/jour (jours off)</label>
-        <input type="number" class="form-input" id="stepsOff" min="0" max="50000" step="500" placeholder="ex: 4000">
+        <input type="number" inputmode="decimal" class="form-input" id="stepsOff" min="0" max="50000" step="500" placeholder="ex: 4000">
       </div>
       <div class="form-group">
         <label>Type de travail</label>
@@ -142,16 +142,16 @@
       </div>
       <div class="form-group">
         <label>Heures assis/jour (total)</label>
-        <input type="number" class="form-input" id="sittingHours" min="0" max="20" placeholder="ex: 10">
+        <input type="number" inputmode="decimal" class="form-input" id="sittingHours" min="0" max="20" placeholder="ex: 10">
         <span class="form-hint">Compte TOUT : travail, repas, voiture, transports, canapé/TV, téléphone… La plupart des gens sous-estiment et sont à 12-16h/jour.</span>
       </div>
       <div class="form-group">
         <label>Jours travaillés/semaine</label>
-        <input type="number" class="form-input" id="workDays" min="0" max="7" placeholder="ex: 5">
+        <input type="number" inputmode="decimal" class="form-input" id="workDays" min="0" max="7" placeholder="ex: 5">
       </div>
       <div class="form-group">
         <label>Heures de travail/jour</label>
-        <input type="number" class="form-input" id="workHours" min="0" max="16" placeholder="ex: 8">
+        <input type="number" inputmode="decimal" class="form-input" id="workHours" min="0" max="16" placeholder="ex: 8">
       </div>
       <div class="form-group">
         <label>Allure de marche</label>
@@ -180,11 +180,11 @@
       </div>
       <div class="form-group">
         <label>Marche transport (min/jour)</label>
-        <input type="number" class="form-input" id="walkTransport" min="0" max="120" placeholder="ex: 15">
+        <input type="number" inputmode="decimal" class="form-input" id="walkTransport" min="0" max="120" placeholder="ex: 15">
       </div>
       <div class="form-group">
         <label>Vélo transport (min/jour)</label>
-        <input type="number" class="form-input" id="bikeTransport" min="0" max="120" placeholder="ex: 0">
+        <input type="number" inputmode="decimal" class="form-input" id="bikeTransport" min="0" max="120" placeholder="ex: 0">
       </div>
     </div>
   </div>
@@ -234,7 +234,7 @@
     <div class="form-grid">
       <div class="form-group" id="targetWeightGroup">
         <label id="targetWeightLabel">Poids cible (kg)</label>
-        <input type="number" class="form-input" id="targetWeight" min="30" max="200" step="0.1" placeholder="ex: 58">
+        <input type="number" inputmode="decimal" class="form-input" id="targetWeight" min="30" max="200" step="0.1" placeholder="ex: 58">
         <span class="form-hint" id="targetWeightHint">Le poids que tu vises à atteindre.</span>
       </div>
       <div class="form-group" id="weeksGroup">
@@ -260,7 +260,7 @@
     <div class="form-grid">
       <div class="form-group">
         <label>Heures de sommeil</label>
-        <input type="number" class="form-input" id="sleepHours" min="3" max="12" step="0.5" placeholder="ex: 7">
+        <input type="number" inputmode="decimal" class="form-input" id="sleepHours" min="3" max="12" step="0.5" placeholder="ex: 7">
       </div>
       <div class="form-group">
         <label>Qualité du sommeil (1-10)</label>
@@ -278,7 +278,7 @@
       </div>
       <div class="form-group">
         <label>Eau (L/jour)</label>
-        <input type="number" class="form-input" id="water" min="0" max="6" step="0.1" placeholder="ex: 2">
+        <input type="number" inputmode="decimal" class="form-input" id="water" min="0" max="6" step="0.1" placeholder="ex: 2">
       </div>
       <div class="form-group">
         <label>Consommation d'alcool</label>
@@ -356,6 +356,10 @@
       <div class="plan-mode-group">
         <button class="plan-mode-btn" data-value="equivalence">Équivalences (flexible)</button>
         <button class="plan-mode-btn" data-value="fixed">Plan fixe</button>
+      </div>
+      <div class="mode-help">
+        <strong>Équivalences</strong> : tu choisis toi-même tes aliments dans chaque catégorie (poulet ou poisson, riz ou pâtes…). Plus de liberté.<br>
+        <strong>Plan fixe</strong> : on te génère un plan complet avec des aliments précis et les quantités. Tu peux changer chaque aliment si besoin.
       </div>
     </div>
 

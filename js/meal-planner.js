@@ -152,8 +152,8 @@ const MealPlanner = {
   MIN_QUANTITIES: {
     protein: 40,   // Au moins 40g de source protéinée
     carb: 30,      // Au moins 30g de féculent
-    fat: 5,        // Au moins 5g de matière grasse
-    fruit: 30,     // Au moins 30g de fruit
+    fat: 10,       // Au moins 10g de matière grasse (~1 c. à soupe)
+    fruit: 80,     // Au moins 80g de fruit (~1 petit fruit)
   },
 
   /**
