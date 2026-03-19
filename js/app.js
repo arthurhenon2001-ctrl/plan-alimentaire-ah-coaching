@@ -988,6 +988,336 @@ function renderSummary() {
   }
 
   summaryEl.innerHTML = html;
+
+  // Générer la liste de courses
+  renderShoppingList();
+
+  // Suggestions de recettes
+  renderRecipeSuggestions();
+}
+
+// ── LISTE DE COURSES ──
+const SHOPPING_CATEGORIES = {
+  protein: { label: 'Viandes, poissons & protéines', icon: '🥩', order: 1 },
+  carb:    { label: 'Féculents & céréales',          icon: '🌾', order: 2 },
+  fruit:   { label: 'Fruits',                         icon: '🍎', order: 3 },
+  vegetable: { label: 'Légumes',                      icon: '🥬', order: 4 },
+  fat:     { label: 'Matières grasses & fromages',    icon: '🧈', order: 5 },
+  other:   { label: 'Autres',                          icon: '📦', order: 6 },
+};
+
+function renderShoppingList() {
+  const wrap = document.getElementById('shoppingListWrap');
+  const listEl = document.getElementById('shoppingList');
+  if (!wrap || !listEl) return;
+
+  const allMeals = state.planDays === 7 && state.weekMeals
+    ? state.weekMeals.flat()
+    : state.meals;
+
+  if (!allMeals || allMeals.length === 0) { wrap.style.display = 'none'; return; }
+
+  // Agréger les aliments par ID
+  const items = {};
+  const multiplier = state.planDays === 7 ? 1 : 7; // Si jour type, multiplier par 7
+
+  allMeals.forEach(meal => {
+    meal.slots.forEach(slot => {
+      if (slot.isVeg) {
+        // Légumes : juste rappeler d'en acheter
+        if (!items['legumes_variés']) {
+          items['legumes_variés'] = {
+            name: 'Légumes variés (à volonté)',
+            category: 'vegetable',
+            totalQty: 0,
+            unit: '',
+            note: 'Brocoli, courgette, haricots verts, épinards, tomates, poivrons...'
+          };
+        }
+        return;
+      }
+      if (!slot.selectedFood) return;
+
+      const id = slot.selectedFood.id;
+      if (!items[id]) {
+        items[id] = {
+          name: slot.selectedFood.name,
+          category: slot.dbCategory || 'other',
+          totalQty: 0,
+          unit: slot.selectedFood.unit || 'g',
+          unitWeight: slot.selectedFood.unitWeight || null,
+        };
+      }
+      items[id].totalQty += slot.quantity;
+    });
+  });
+
+  // Multiplier par 7 si plan jour type
+  if (state.planDays !== 7) {
+    Object.values(items).forEach(item => {
+      if (item.totalQty > 0) item.totalQty *= 7;
+    });
+  }
+
+  // Grouper par catégorie
+  const groups = {};
+  Object.entries(items).forEach(([id, item]) => {
+    const cat = item.category;
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push({ id, ...item });
+  });
+
+  // Trier les groupes par ordre
+  const sortedCats = Object.keys(groups).sort((a, b) =>
+    (SHOPPING_CATEGORIES[a]?.order || 99) - (SHOPPING_CATEGORIES[b]?.order || 99)
+  );
+
+  let html = '';
+  sortedCats.forEach(cat => {
+    const catInfo = SHOPPING_CATEGORIES[cat] || SHOPPING_CATEGORIES.other;
+    html += `<div class="shop-category">
+      <div class="shop-cat-header">${catInfo.icon} ${catInfo.label}</div>`;
+
+    groups[cat].sort((a, b) => a.name.localeCompare(b.name));
+    groups[cat].forEach(item => {
+      let qtyDisplay = '';
+      if (item.totalQty > 0) {
+        if (item.unitWeight && item.unit !== 'g') {
+          const units = Math.ceil(item.totalQty / item.unitWeight);
+          const unitLabel = item.unit === 'egg' ? (units > 1 ? 'oeufs' : 'oeuf') :
+                           item.unit === 'dose' ? (units > 1 ? 'doses' : 'dose') :
+                           item.unit + (units > 1 ? 's' : '');
+          qtyDisplay = `~${Math.round(item.totalQty)}g (${units} ${unitLabel})`;
+        } else {
+          // Arrondir aux 50g pour des courses réalistes
+          const rounded = Math.ceil(item.totalQty / 50) * 50;
+          qtyDisplay = `~${rounded}g`;
+        }
+      }
+
+      html += `<label class="shop-item">
+        <input type="checkbox" class="shop-check">
+        <span class="shop-name">${item.name}</span>
+        ${qtyDisplay ? `<span class="shop-qty">${qtyDisplay}</span>` : ''}
+        ${item.note ? `<span class="shop-note">${item.note}</span>` : ''}
+      </label>`;
+    });
+
+    html += '</div>';
+  });
+
+  listEl.innerHTML = html;
+  wrap.style.display = 'block';
+}
+
+function copyShoppingList() {
+  const allMeals = state.planDays === 7 && state.weekMeals
+    ? state.weekMeals.flat()
+    : state.meals;
+
+  const items = {};
+  allMeals.forEach(meal => {
+    meal.slots.forEach(slot => {
+      if (slot.isVeg || !slot.selectedFood) return;
+      const id = slot.selectedFood.id;
+      if (!items[id]) items[id] = { name: slot.selectedFood.name, qty: 0 };
+      items[id].qty += slot.quantity;
+    });
+  });
+
+  if (state.planDays !== 7) {
+    Object.values(items).forEach(i => { i.qty *= 7; });
+  }
+
+  let text = '🛒 LISTE DE COURSES — AH Coaching\n';
+  text += `Plan ${state.planDays === 7 ? 'semaine' : 'jour type (x7)'}\n\n`;
+  Object.values(items).sort((a, b) => a.name.localeCompare(b.name)).forEach(item => {
+    const rounded = Math.ceil(item.qty / 50) * 50;
+    text += `☐ ${item.name} — ~${rounded}g\n`;
+  });
+  text += '\n☐ Légumes variés — à volonté\n';
+  text += '\nGénéré par AH Coaching\n';
+
+  navigator.clipboard.writeText(text).then(() => {
+    const fb = document.getElementById('shopCopyFeedback');
+    fb.style.display = 'block';
+    setTimeout(() => { fb.style.display = 'none'; }, 3000);
+  });
+}
+
+// ── SUGGESTIONS DE RECETTES ──
+const RECIPE_SUGGESTIONS = [
+  {
+    id: 'overnight-oats-proteine',
+    name: 'Overnight Oats Protéiné',
+    emoji: '🥣',
+    category: 'Petit-déjeuner',
+    time: 5,
+    tags: ['Meal prep', 'Perte de poids'],
+    matchIngredients: ['skyr', 'avoine'],
+    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=overnight-oats-proteine'
+  },
+  {
+    id: 'pancakes-banane-avoine',
+    name: 'Pancakes Banane-Avoine',
+    emoji: '🥞',
+    category: 'Petit-déjeuner',
+    time: 15,
+    tags: ['Sans farine', 'Rapide'],
+    matchIngredients: ['banane', 'avoine', 'oeuf'],
+    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=pancakes-banane-avoine'
+  },
+  {
+    id: 'bowl-poulet-quinoa',
+    name: 'Bowl Poulet Quinoa',
+    emoji: '🥗',
+    category: 'Déjeuner',
+    time: 25,
+    tags: ['Haute protéine', 'Batch cooking'],
+    matchIngredients: ['poulet', 'quinoa'],
+    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=bowl-poulet-quinoa'
+  },
+  {
+    id: 'saumon-patate-douce',
+    name: 'Saumon & Patate douce',
+    emoji: '🐟',
+    category: 'Dîner',
+    time: 30,
+    tags: ['Oméga 3', 'Complet'],
+    matchIngredients: ['saumon', 'patate_douce'],
+    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=saumon-patate-douce'
+  },
+  {
+    id: 'wrap-dinde-avocat',
+    name: 'Wrap Dinde Avocat',
+    emoji: '🌯',
+    category: 'Déjeuner',
+    time: 10,
+    tags: ['Express', 'À emporter'],
+    matchIngredients: ['dinde', 'avocat', 'tortilla'],
+    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=wrap-dinde-avocat'
+  },
+  {
+    id: 'porridge-proteine',
+    name: 'Porridge Protéiné',
+    emoji: '🥣',
+    category: 'Petit-déjeuner',
+    time: 10,
+    tags: ['Chaud', 'Réconfortant'],
+    matchIngredients: ['avoine', 'whey', 'banane'],
+    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=porridge-proteine'
+  },
+  {
+    id: 'salade-lentilles-chevre',
+    name: 'Salade Lentilles & Chèvre',
+    emoji: '🥗',
+    category: 'Déjeuner',
+    time: 15,
+    tags: ['Végétarien', 'Rassasiant'],
+    matchIngredients: ['lentilles', 'chevre'],
+    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=salade-lentilles-chevre'
+  },
+  {
+    id: 'omelette-legumes',
+    name: 'Omelette aux légumes',
+    emoji: '🥚',
+    category: 'Dîner',
+    time: 10,
+    tags: ['Low carb', 'Express'],
+    matchIngredients: ['oeuf', 'blanc_oeuf'],
+    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=omelette-legumes'
+  },
+  {
+    id: 'riz-boeuf-haricots',
+    name: 'Riz Bœuf Haricots',
+    emoji: '🍛',
+    category: 'Déjeuner',
+    time: 25,
+    tags: ['Haute protéine', 'Batch cooking'],
+    matchIngredients: ['boeuf_5', 'boeuf_bavette', 'riz_blanc', 'riz_complet', 'haricots_rouges'],
+    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=riz-boeuf-haricots'
+  },
+  {
+    id: 'smoothie-proteine',
+    name: 'Smoothie Protéiné',
+    emoji: '🥤',
+    category: 'Collation',
+    time: 5,
+    tags: ['Post-training', 'Express'],
+    matchIngredients: ['whey', 'banane', 'fruits_rouges'],
+    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=smoothie-proteine'
+  },
+  {
+    id: 'poke-bowl-cabillaud',
+    name: 'Poké Bowl Cabillaud',
+    emoji: '🐠',
+    category: 'Déjeuner',
+    time: 20,
+    tags: ['Frais', 'Complet'],
+    matchIngredients: ['cabillaud', 'riz_blanc', 'avocat'],
+    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=poke-bowl-cabillaud'
+  },
+  {
+    id: 'pates-poulet-pesto',
+    name: 'Pâtes Poulet Pesto',
+    emoji: '🍝',
+    category: 'Déjeuner',
+    time: 20,
+    tags: ['Gourmand', 'Batch cooking'],
+    matchIngredients: ['poulet', 'pates'],
+    url: 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=pates-poulet-pesto'
+  },
+];
+
+function renderRecipeSuggestions() {
+  const wrap = document.getElementById('recipeSuggestionsWrap');
+  const container = document.getElementById('recipeSuggestions');
+  if (!wrap || !container) return;
+
+  // Collecter les IDs d'aliments utilisés dans le plan
+  const allMeals = state.planDays === 7 && state.weekMeals
+    ? state.weekMeals.flat()
+    : state.meals;
+
+  const usedFoodIds = new Set();
+  allMeals.forEach(meal => {
+    meal.slots.forEach(slot => {
+      if (slot.selectedFood) usedFoodIds.add(slot.selectedFood.id);
+    });
+  });
+
+  // Scorer chaque recette par nombre d'ingrédients matchés
+  const scored = RECIPE_SUGGESTIONS.map(recipe => {
+    const matches = recipe.matchIngredients.filter(id => usedFoodIds.has(id));
+    return { ...recipe, score: matches.length, matchCount: matches.length };
+  }).filter(r => r.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 6);
+
+  if (scored.length === 0) { wrap.style.display = 'none'; return; }
+
+  let html = '<div class="recipe-grid">';
+  scored.forEach(recipe => {
+    html += `<a href="${recipe.url}" target="_blank" rel="noopener" class="recipe-card-link">
+      <div class="recipe-suggest-card">
+        <div class="recipe-emoji">${recipe.emoji}</div>
+        <div class="recipe-info">
+          <div class="recipe-name">${recipe.name}</div>
+          <div class="recipe-meta">${recipe.category} · ${recipe.time} min</div>
+          <div class="recipe-tags">${recipe.tags.map(t => `<span class="recipe-tag">${t}</span>`).join('')}</div>
+        </div>
+        <div class="recipe-match">${recipe.matchCount} aliment${recipe.matchCount > 1 ? 's' : ''} de ton plan</div>
+      </div>
+    </a>`;
+  });
+  html += '</div>';
+
+  html += `<a href="https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/" target="_blank" rel="noopener" class="all-recipes-link">
+    Voir toutes les recettes (50+) →
+  </a>`;
+
+  container.innerHTML = html;
+  wrap.style.display = 'block';
 }
 
 // ── EXPORT : IMPRIMER (natif browser → PDF via "Enregistrer en PDF") ──
