@@ -446,15 +446,18 @@
   </div>
 
   <!-- Lien recettes -->
+  <!-- Recettes -->
   <div class="section-divider"></div>
   <div class="recipe-link-section">
     <h3 class="recipe-suggest-title">👨‍🍳 Besoin d'idées recettes ?</h3>
     <p class="shopping-desc">Découvre notre bibliothèque de 50+ recettes adaptées à ton plan.</p>
-    <a href="https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/" target="_blank" rel="noopener" class="btn-export primary" style="display:inline-block;text-decoration:none;text-align:center;margin-top:10px">
-      Voir les recettes AH Coaching →
+    <a href="https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/" target="_blank" rel="noopener" class="btn-recipes-link">
+      🍳 Voir les recettes AH Coaching →
     </a>
   </div>
 
+  <!-- Export -->
+  <div class="section-divider"></div>
   <div class="export-actions">
     <button class="btn-export primary" onclick="printPlan()">🖨 Imprimer / Sauvegarder en PDF</button>
     <button class="btn-export secondary" onclick="copyPlanText()">📋 Copier le plan (texte)</button>
@@ -464,6 +467,9 @@
     <button class="btn-export secondary" onclick="resetAll()">Recommencer</button>
   </div>
 </div>
+
+<!-- Bouton retour en haut (flottant) -->
+<button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 
 <!-- ── NAVIGATION ── -->
 <div class="nav-bottom">
@@ -527,6 +533,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (menopauseGroup && state.sex === 'male') menopauseGroup.style.display = 'none';
 
   // No need for MutationObserver — recap bar is now inside step 4
+});
+
+// Back to top button visibility
+window.addEventListener('scroll', () => {
+  const btn = document.getElementById('backToTop');
+  if (btn) btn.classList.toggle('visible', window.scrollY > 400);
 });
 
 // PWA service worker
