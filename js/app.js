@@ -701,17 +701,25 @@ function buildMealCardHTML(meal, mealIndex, constraints, dayIndex) {
 
   // Slots
   meal.slots.forEach((slot, si) => {
-    html += `<div class="slot">`;
+    const isSkipped = slot.skipped === true;
+    const canSkip = slot.type !== 'protein'; // On ne peut pas skip la protéine
+
+    html += `<div class="slot ${isSkipped ? 'slot-skipped' : ''}">`;
     html += `<div class="slot-header">
       <span class="slot-dot" style="background:${slot.color}"></span>
       <span class="slot-label">${slot.label}</span>`;
-    if (!slot.isVeg && slot.target > 0) {
+    if (!slot.isVeg && !isSkipped && slot.target > 0) {
       const macroName = slot.macro === 'prot' ? 'protéines' : (slot.macro === 'gluc' ? 'glucides' : 'lipides');
       html += `<span class="slot-target-badge">${slot.target}g de ${macroName}</span>`;
     }
+    if (canSkip) {
+      html += `<button class="skip-btn ${isSkipped ? 'skipped' : ''}" onclick="toggleSkipSlot(${mealIndex}, ${si})" title="${isSkipped ? 'Réactiver' : 'Retirer du repas'}">${isSkipped ? '+ Ajouter' : '✕'}</button>`;
+    }
     html += '</div>';
 
-    if (slot.isVeg) {
+    if (isSkipped) {
+      html += `<div class="skipped-msg">Retiré — macros redistribuées sur les autres aliments</div>`;
+    } else if (slot.isVeg) {
       html += `<div class="legumes-box">
         <div class="legumes-title">200g minimum — à volonté</div>
         <div class="legumes-text">Courgettes, brocolis, haricots verts, épinards, tomates, poivrons, salade, carottes, champignons…</div>
@@ -853,6 +861,125 @@ function updateMealSlotDisplays(mealIndex) {
 }
 
 // ── SWAP / REGENERATE (fixed mode) ──
+/**
+ * Skip/unskip un slot et redistribue les macros sur les autres slots du repas
+ */
+function toggleSkipSlot(mealIndex, slotIndex) {
+  const meals = state.planDays === 7 && state.weekMeals
+    ? state.weekMeals[state._currentDay || 0]
+    : state.meals;
+
+  const meal = meals[mealIndex];
+  const slot = meal.slots[slotIndex];
+  slot.skipped = !slot.skipped;
+
+  if (slot.skipped) {
+    // Redistribuer les macros de ce slot sur les autres slots actifs du même type
+    slot.selectedFood = null;
+    slot.quantity = 0;
+  }
+
+  // Recalculer les targets en excluant les slots skippés
+  redistributeMealMacros(meal);
+
+  // Recalculer les quantités
+  const activeSlots = meal.slots.filter(s => !s.isVeg && !s.skipped && s.selectedFood);
+  MealPlanner._solveQuantities(activeSlots, meal);
+
+  // En mode fixe, regénérer les aliments pour les slots non-skippés qui n'ont pas d'aliment
+  if (state.planMode === 'fixed') {
+    const constraints = { allergies: state.allergies, diet: state.diet, excludedIds: state.excludedFoods };
+    meal.slots.forEach(s => {
+      if (!s.isVeg && !s.skipped && !s.selectedFood) {
+        MealPlanner.regenerateSlot(s, constraints, null);
+      }
+    });
+    // Re-solve after regeneration
+    const newActive = meal.slots.filter(s => !s.isVeg && !s.skipped && s.selectedFood);
+    MealPlanner._solveQuantities(newActive, meal);
+  }
+
+  // Re-render
+  const constraints = { allergies: state.allergies, diet: state.diet, excludedIds: state.excludedFoods };
+  if (state.planDays === 7 && state.weekMeals) {
+    renderDayContent(state._currentDay || 0, constraints);
+  } else {
+    renderPlan(state.meals, constraints);
+  }
+  updateRecapBar(meals);
+  Storage.save(state);
+}
+
+/**
+ * Redistribue les macros d'un repas quand des slots sont skippés
+ * Les glucides du fruit vont sur le féculent, les lipides vont sur la protéine, etc.
+ */
+function redistributeMealMacros(meal) {
+  const originalProt = meal.macroDisplay.prot;
+  const originalGluc = meal.macroDisplay.gluc;
+  const originalLip = meal.macroDisplay.lip;
+
+  // Collecter les macros des slots skippés
+  let freedGluc = 0, freedLip = 0, freedProt = 0;
+
+  meal.slots.forEach(slot => {
+    if (slot.skipped && !slot.isVeg) {
+      // Le target de ce slot va être redistribué
+      if (slot.macro === 'gluc') freedGluc += slot.target;
+      if (slot.macro === 'lip') freedLip += slot.target;
+      if (slot.macro === 'prot') freedProt += slot.target;
+    }
+  });
+
+  // Redistribuer sur les slots actifs du même macro
+  meal.slots.forEach(slot => {
+    if (slot.skipped || slot.isVeg) return;
+
+    if (slot.macro === 'gluc' && freedGluc > 0) {
+      // Compter combien de slots glucides actifs restent
+      const activeGluc = meal.slots.filter(s => !s.skipped && !s.isVeg && s.macro === 'gluc');
+      if (activeGluc.length > 0) {
+        slot.target += Math.round(freedGluc / activeGluc.length);
+      }
+    }
+    if (slot.macro === 'lip' && freedLip > 0) {
+      const activeLip = meal.slots.filter(s => !s.skipped && !s.isVeg && s.macro === 'lip');
+      if (activeLip.length > 0) {
+        slot.target += Math.round(freedLip / activeLip.length);
+      }
+    }
+    if (slot.macro === 'prot' && freedProt > 0) {
+      const activeProt = meal.slots.filter(s => !s.skipped && !s.isVeg && s.macro === 'prot');
+      if (activeProt.length > 0) {
+        slot.target += Math.round(freedProt / activeProt.length);
+      }
+    }
+  });
+
+  // Si TOUS les slots d'un macro sont skippés, redistribuer les calories équivalentes
+  // sur les autres macros (par ex: pas de fruit = plus de féculent OU plus de lipides)
+  const hasActiveGluc = meal.slots.some(s => !s.skipped && !s.isVeg && s.macro === 'gluc');
+  const hasActiveLip = meal.slots.some(s => !s.skipped && !s.isVeg && s.macro === 'lip');
+
+  if (!hasActiveGluc && freedGluc > 0) {
+    // Convertir les glucides en lipides (4kcal/g gluc → 9kcal/g lip)
+    const kcalFromGluc = freedGluc * 4;
+    const extraLip = Math.round(kcalFromGluc / 9);
+    meal.slots.forEach(s => {
+      if (!s.skipped && !s.isVeg && s.macro === 'lip') s.target += extraLip;
+    });
+  }
+
+  if (!hasActiveLip && freedLip > 0) {
+    // Convertir les lipides en glucides
+    const kcalFromLip = freedLip * 9;
+    const extraGluc = Math.round(kcalFromLip / 4);
+    meal.slots.forEach(s => {
+      if (!s.skipped && !s.isVeg && s.macro === 'gluc') s.target += extraGluc;
+    });
+  }
+}
+
 function swapFood(mealIndex, slotIndex) {
   const slot = state.meals[mealIndex].slots[slotIndex];
   const oldId = slot.selectedFood ? slot.selectedFood.id : null;
@@ -1143,6 +1270,112 @@ function copyShoppingList() {
     fb.style.display = 'block';
     setTimeout(() => { fb.style.display = 'none'; }, 3000);
   });
+}
+
+// ── EXPORT PDF LISTE DE COURSES ──
+function exportShoppingPDF() {
+  const allMeals = state.planDays === 7 && state.weekMeals
+    ? state.weekMeals.flat()
+    : state.meals;
+
+  // Collecter les items
+  const items = {};
+  allMeals.forEach(meal => {
+    meal.slots.forEach(slot => {
+      if (slot.isVeg || !slot.selectedFood || slot.skipped) return;
+      const id = slot.selectedFood.id;
+      if (!items[id]) {
+        items[id] = {
+          name: slot.selectedFood.name,
+          category: slot.dbCategory || 'other',
+          qty: 0,
+          unit: slot.selectedFood.unit || 'g',
+          unitWeight: slot.selectedFood.unitWeight || null,
+        };
+      }
+      items[id].qty += slot.quantity;
+    });
+  });
+
+  if (state.planDays !== 7) {
+    Object.values(items).forEach(i => { i.qty *= 7; });
+  }
+
+  // Grouper par catégorie
+  const groups = {};
+  Object.values(items).forEach(item => {
+    const cat = item.category;
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(item);
+  });
+
+  const catOrder = ['protein', 'carb', 'fruit', 'vegetable', 'fat', 'other'];
+  const catLabels = {
+    protein: '🥩 Viandes, poissons & protéines',
+    carb: '🌾 Féculents & céréales',
+    fruit: '🍎 Fruits',
+    vegetable: '🥬 Légumes',
+    fat: '🧈 Matières grasses & fromages',
+    other: '📦 Autres',
+  };
+
+  let tableRows = '';
+  catOrder.forEach(cat => {
+    if (!groups[cat]) return;
+    tableRows += `<tr class="cat-row"><td colspan="3">${catLabels[cat] || cat}</td></tr>`;
+    groups[cat].sort((a, b) => a.name.localeCompare(b.name)).forEach(item => {
+      let qtyDisplay = '';
+      if (item.qty > 0) {
+        const rounded = Math.ceil(item.qty / 50) * 50;
+        qtyDisplay = `~${rounded}g`;
+        if (item.unitWeight && item.unit !== 'g') {
+          const units = Math.ceil(item.qty / item.unitWeight);
+          const unitLabel = item.unit === 'egg' ? (units > 1 ? 'oeufs' : 'oeuf') : item.unit + (units > 1 ? 's' : '');
+          qtyDisplay += ` (${units} ${unitLabel})`;
+        }
+      }
+      tableRows += `<tr><td class="check">☐</td><td>${item.name}</td><td class="qty">${qtyDisplay}</td></tr>`;
+    });
+  });
+  // Légumes
+  tableRows += `<tr class="cat-row"><td colspan="3">🥬 Légumes</td></tr>`;
+  tableRows += `<tr><td class="check">☐</td><td>Légumes variés (à volonté)</td><td class="qty">Brocoli, courgette, épinards, tomates…</td></tr>`;
+
+  const htmlContent = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+<title>Liste de courses — AH Coaching</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; padding: 40px; max-width: 700px; margin: 0 auto; color: #2C2420; }
+  .header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px solid #6B4F3A; }
+  .header h1 { font-family: 'Playfair Display', serif; font-size: 24px; color: #4A3628; }
+  .header p { font-size: 13px; color: #6B4F3A; margin-top: 4px; }
+  .header .meta { font-size: 11px; color: #9B9590; margin-top: 8px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  tr { border-bottom: 1px solid #E8E0D8; }
+  td { padding: 8px 6px; font-size: 13px; vertical-align: middle; }
+  .check { width: 24px; font-size: 16px; text-align: center; }
+  .qty { text-align: right; font-weight: 600; color: #6B4F3A; font-size: 12px; white-space: nowrap; }
+  .cat-row td { font-weight: 700; font-size: 14px; color: #6B4F3A; padding-top: 18px; border-bottom: 2px solid #D4A574; background: #FDFBF9; }
+  .footer { text-align: center; margin-top: 30px; padding-top: 16px; border-top: 1px solid #E8E0D8; font-size: 10px; color: #9B9590; }
+  @media print { body { padding: 20px; } }
+</style></head><body>
+<div class="header">
+  <h1>🛒 Liste de courses</h1>
+  <p>AH Coaching — Arthur Hénon & Mathilde Vion</p>
+  <div class="meta">Plan ${state.planDays === 7 ? 'semaine' : 'jour type (x7)'} · ${state.results?.targetCals || '—'} kcal/jour · Généré le ${new Date().toLocaleDateString('fr-FR')}</div>
+</div>
+<table>${tableRows}</table>
+<div class="footer">
+  <p>Coche chaque article au fur et à mesure de tes achats.</p>
+  <p style="margin-top:4px">Ce document a été généré automatiquement par AH Coaching.</p>
+</div>
+</body></html>`;
+
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(htmlContent);
+  printWindow.document.close();
+  printWindow.onload = () => { printWindow.print(); };
 }
 
 // ── SUGGESTIONS DE RECETTES ──

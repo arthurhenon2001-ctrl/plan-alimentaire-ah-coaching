@@ -438,7 +438,10 @@
     <h3 class="shopping-title">🛒 Ta liste de courses</h3>
     <p class="shopping-desc">Basée sur ton plan. Coche les articles au fur et à mesure.</p>
     <div id="shoppingList"></div>
-    <button class="btn-export secondary" onclick="copyShoppingList()" style="margin-top:12px">📋 Copier la liste</button>
+    <div class="export-actions" style="margin-top:12px">
+      <button class="btn-export primary" onclick="exportShoppingPDF()">🛒 PDF Liste de courses</button>
+      <button class="btn-export secondary" onclick="copyShoppingList()">📋 Copier</button>
+    </div>
     <div id="shopCopyFeedback" class="copy-feedback" style="display:none">Liste copiée !</div>
   </div>
 
