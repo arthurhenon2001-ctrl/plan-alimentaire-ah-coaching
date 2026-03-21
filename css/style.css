@@ -558,6 +558,33 @@ body {
 
 .exclude-item input { display: none; }
 
+.exclude-group { margin-bottom: 12px; }
+
+.exclude-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--beige);
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+
+.exclude-group-header.active { background: var(--red-light); }
+.exclude-group-header input { width: 16px; height: 16px; cursor: pointer; }
+.exclude-group-header strong { flex: 1; }
+.exclude-group-count { font-size: 11px; color: var(--gray); font-weight: 400; }
+
+.exclude-group-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-left: 8px;
+}
+
 /* ── STICKY RECAP BAR ── */
 .recap-bar {
   position: sticky;

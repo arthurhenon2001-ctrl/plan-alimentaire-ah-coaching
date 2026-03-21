@@ -316,19 +316,32 @@ function renderExcludedFoodsList() {
   const container = document.getElementById('excludedFoodsList');
   if (!container) return;
 
-  const allFoods = [
-    ...NUTRITION_DB.protein,
-    ...NUTRITION_DB.carb,
-    ...NUTRITION_DB.fat,
-    ...NUTRITION_DB.fruit,
-  ].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+  // Grouper les aliments par catégorie lisible
+  const FOOD_GROUPS = [
+    { label: 'Volailles', ids: ['poulet', 'dinde', 'cuisse_poulet', 'canard'] },
+    { label: 'Viandes rouges', ids: ['boeuf_5', 'boeuf_bavette', 'boeuf_rumsteck', 'veau', 'agneau'] },
+    { label: 'Porc & charcuterie', ids: ['porc_filet', 'jambon'] },
+    { label: 'Poissons', ids: NUTRITION_DB.protein.filter(f => f.tags.includes('poisson')).map(f => f.id) },
+    { label: 'Crustacés & fruits de mer', ids: NUTRITION_DB.protein.filter(f => f.tags.includes('crustace')).map(f => f.id) },
+    { label: 'Œufs', ids: ['oeuf', 'blanc_oeuf'] },
+    { label: 'Produits laitiers', ids: ['fromage_blanc', 'skyr', 'yaourt_grec', 'cottage', 'fromage_rape', 'mozzarella', 'chevre', 'feta', 'creme_fraiche', 'beurre', 'whey'] },
+    { label: 'Protéines végétales', ids: ['tofu', 'tempeh', 'seitan', 'edamame'] },
+    { label: 'Féculents & céréales', ids: NUTRITION_DB.carb.map(f => f.id) },
+    { label: 'Matières grasses', ids: NUTRITION_DB.fat.filter(f => !['fromage_rape','mozzarella','chevre','feta','creme_fraiche','beurre'].includes(f.id)).map(f => f.id) },
+    { label: 'Fruits', ids: NUTRITION_DB.fruit.map(f => f.id) },
+  ];
+
+  const allFoodsMap = {};
+  ['protein', 'carb', 'fat', 'fruit'].forEach(cat => {
+    NUTRITION_DB[cat].forEach(f => { allFoodsMap[f.id] = f; });
+  });
 
   container.innerHTML = '';
 
   // Search input
   const searchWrap = document.createElement('div');
   searchWrap.className = 'excluded-search-wrap';
-  searchWrap.innerHTML = '<input type="text" id="excludeSearch" placeholder="Rechercher un aliment..." class="form-input">';
+  searchWrap.innerHTML = '<input type="text" id="excludeSearch" placeholder="Rechercher un aliment (ex: saumon, riz, avocat...)" class="form-input">';
   container.appendChild(searchWrap);
 
   const listWrap = document.createElement('div');
@@ -337,18 +350,42 @@ function renderExcludedFoodsList() {
   container.appendChild(listWrap);
 
   function renderList(filter = '') {
-    const filtered = filter
-      ? allFoods.filter(f => f.name.toLowerCase().includes(filter.toLowerCase()))
-      : allFoods;
+    let html = '';
 
-    listWrap.innerHTML = filtered.map(food => {
-      const checked = state.excludedFoods.includes(food.id) ? 'checked' : '';
-      return `<label class="exclude-item ${checked ? 'active' : ''}">
-        <input type="checkbox" value="${food.id}" ${checked} class="exclude-check">
-        <span>${food.name}</span>
-      </label>`;
-    }).join('');
+    FOOD_GROUPS.forEach(group => {
+      const foods = group.ids
+        .map(id => allFoodsMap[id])
+        .filter(f => f)
+        .filter(f => !filter || f.name.toLowerCase().includes(filter.toLowerCase()) || group.label.toLowerCase().includes(filter.toLowerCase()));
 
+      if (foods.length === 0) return;
+
+      // Check if all in group are excluded
+      const allExcluded = foods.every(f => state.excludedFoods.includes(f.id));
+      const someExcluded = foods.some(f => state.excludedFoods.includes(f.id));
+
+      html += `<div class="exclude-group">
+        <label class="exclude-group-header ${allExcluded ? 'active' : ''}">
+          <input type="checkbox" class="exclude-group-check" data-group="${group.label}" ${allExcluded ? 'checked' : ''}>
+          <strong>${group.label}</strong>
+          <span class="exclude-group-count">${foods.length} aliments</span>
+        </label>
+        <div class="exclude-group-items">`;
+
+      foods.forEach(food => {
+        const checked = state.excludedFoods.includes(food.id) ? 'checked' : '';
+        html += `<label class="exclude-item ${checked ? 'active' : ''}">
+          <input type="checkbox" value="${food.id}" ${checked} class="exclude-check">
+          <span>${food.name}</span>
+        </label>`;
+      });
+
+      html += '</div></div>';
+    });
+
+    listWrap.innerHTML = html;
+
+    // Individual food checkboxes
     listWrap.querySelectorAll('.exclude-check').forEach(cb => {
       cb.addEventListener('change', () => {
         if (cb.checked) {
@@ -357,8 +394,44 @@ function renderExcludedFoodsList() {
           state.excludedFoods = state.excludedFoods.filter(id => id !== cb.value);
         }
         cb.parentElement.classList.toggle('active', cb.checked);
+        // Update group header checkbox state
+        updateGroupHeaders();
         Storage.save(state);
       });
+    });
+
+    // Group header checkboxes (select/deselect all in group)
+    listWrap.querySelectorAll('.exclude-group-check').forEach(gcb => {
+      gcb.addEventListener('change', () => {
+        const groupLabel = gcb.dataset.group;
+        const group = FOOD_GROUPS.find(g => g.label === groupLabel);
+        if (!group) return;
+        const groupFoods = group.ids.filter(id => allFoodsMap[id]);
+
+        if (gcb.checked) {
+          groupFoods.forEach(id => {
+            if (!state.excludedFoods.includes(id)) state.excludedFoods.push(id);
+          });
+        } else {
+          state.excludedFoods = state.excludedFoods.filter(id => !groupFoods.includes(id));
+        }
+
+        // Re-render to update individual checkboxes
+        renderList(filter);
+        Storage.save(state);
+      });
+    });
+  }
+
+  function updateGroupHeaders() {
+    listWrap.querySelectorAll('.exclude-group-check').forEach(gcb => {
+      const groupLabel = gcb.dataset.group;
+      const group = FOOD_GROUPS.find(g => g.label === groupLabel);
+      if (!group) return;
+      const groupFoods = group.ids.filter(id => allFoodsMap[id]);
+      const allExcluded = groupFoods.every(id => state.excludedFoods.includes(id));
+      gcb.checked = allExcluded;
+      gcb.parentElement.classList.toggle('active', allExcluded);
     });
   }
 
