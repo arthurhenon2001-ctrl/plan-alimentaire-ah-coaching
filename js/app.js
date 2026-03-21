@@ -101,12 +101,6 @@ function goToStep(n) {
   const step = document.querySelector(`[data-step="${n}"]`);
   if (step) step.classList.add('active');
 
-  // Scroll vers le titre du step (pas tout en haut)
-  const title = step?.querySelector('.step-title');
-  if (title) {
-    setTimeout(() => title.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
-  }
-
   // Progress bar
   const pct = (n / TOTAL_STEPS) * 100;
   document.getElementById('progressFill').style.width = pct + '%';
@@ -133,7 +127,12 @@ function goToStep(n) {
     renderSummary();
   }
 
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Scroll vers le titre du step (pas tout en haut)
+  const title = step?.querySelector('.step-title');
+  if (title) {
+    setTimeout(() => title.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  }
+
   Storage.save(state);
 }
 
@@ -640,6 +639,12 @@ function renderMetaboResults(r) {
     ${r.deficitPct < 0 ? `<div class="deficit-info">Déficit de ${Math.abs(r.deficitPct).toFixed(0)}% (−${Math.abs(r.tdee - r.targetCals)} kcal/jour)</div>` : ''}
     ${r.deficitPct > 0 ? `<div class="deficit-info">Surplus de +${r.deficitPct.toFixed(0)}% (+${r.targetCals - r.tdee} kcal/jour)</div>` : ''}
     ${state.targetWeight ? `<div class="deficit-info" style="margin-top:6px">Objectif : ${state.weight} kg → ${state.targetWeight} kg en ${state.weeks} semaines</div>` : ''}
+    ${(r.warnings && r.warnings.length > 0) ? r.warnings.map(w => `
+      <div class="warning-box ${w.type === 'below_bmr' ? 'warning-danger' : (w.type === 'too_aggressive' ? 'warning-danger' : 'warning-info')}">
+        <strong>${w.type === 'below_bmr' ? '⛔' : (w.type === 'too_aggressive' ? '⚠️' : '💡')} ${w.type === 'below_bmr' ? 'Protection métabolique' : (w.type === 'too_aggressive' ? 'Objectif trop ambitieux' : 'Conseil')}</strong>
+        <p>${w.message}</p>
+      </div>
+    `).join('') : ''}
   `;
 }
 
@@ -1414,7 +1419,7 @@ function exportShoppingPDF() {
 
 // ── SUGGESTIONS DE RECETTES ──
 // matchIngredients = IDs from our nutrition-db.js that match the recipe
-const BASE_URL = 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=';
+const RECIPE_BASE_URL = 'https://arthurhenon2001-ctrl.github.io/ah-coaching-recettes/recipe.html?id=';
 const RECIPE_SUGGESTIONS = [
   { id: 'overnight-oats-proteine', name: 'Overnight Oats Protéiné', emoji: '🥣', category: 'Petit-déjeuner', time: 5, tags: ['Meal prep', 'Perte de poids'], matchIngredients: ['skyr', 'avoine'] },
   { id: 'pancakes-banane-avoine', name: 'Pancakes Banane-Avoine', emoji: '🥞', category: 'Petit-déjeuner', time: 15, tags: ['Sans farine', 'Rapide'], matchIngredients: ['banane', 'avoine', 'oeuf'] },
@@ -1472,7 +1477,7 @@ function renderRecipeSuggestions() {
 
   let html = '<div class="recipe-grid">';
   scored.forEach(recipe => {
-    html += `<a href="${BASE_URL}${recipe.id}" target="_blank" rel="noopener" class="recipe-card-link">
+    html += `<a href="${RECIPE_BASE_URL}${recipe.id}" target="_blank" rel="noopener" class="recipe-card-link">
       <div class="recipe-suggest-card">
         <div class="recipe-emoji">${recipe.emoji}</div>
         <div class="recipe-info">

@@ -733,6 +733,30 @@ body {
   font-weight: 500;
 }
 
+.warning-box {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.warning-box strong { display: block; margin-bottom: 6px; font-size: 14px; }
+.warning-box p { margin: 0; }
+
+.warning-danger {
+  background: #FFF0F0;
+  border: 1.5px solid #E8A0A0;
+  color: #8B2020;
+}
+
+.warning-info {
+  background: #FFF8EE;
+  border: 1.5px solid #E8D4A0;
+  color: #6B5A2A;
+}
+
 /* ── MEAL CARDS ── */
 .meal-card {
   background: var(--white);

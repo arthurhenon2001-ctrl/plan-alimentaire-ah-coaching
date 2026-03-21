@@ -146,26 +146,76 @@ const Calculator = {
     return 0;
   },
 
-  calculateTargetCalories(tdee, goal, sex, weight, targetWeight, weeks) {
+  /**
+   * Calcule les calories cibles avec sécurités robustes
+   * Règle n°1 : JAMAIS en dessous du BMR
+   * Règle n°2 : Perte max adaptée au profil (sexe, poids)
+   * Règle n°3 : Si trop bas → message prévention (augmenter activité)
+   */
+  calculateTargetCalories(tdee, goal, sex, weight, targetWeight, weeks, bmr) {
     if (goal === 'maintain') {
-      return { targetCals: tdee, deficitPct: 0 };
+      return { targetCals: tdee, deficitPct: 0, warnings: [] };
     }
     if (goal === 'recomp') {
-      // Slight deficit for recomp
-      return { targetCals: Math.round(tdee * 0.95), deficitPct: -5 };
+      return { targetCals: Math.round(tdee * 0.95), deficitPct: -5, warnings: [] };
     }
 
-    // If target weight is set, calculate deficit/surplus from it
+    const warnings = [];
+
+    // Perte max par semaine selon le profil
+    // Femmes : max 0.5-0.7% du poids/semaine
+    // Hommes : max 0.7-1% du poids/semaine
+    // Obèses (BMI>30) : peuvent aller un peu plus haut
+    const bmi = weight / ((170 / 100) ** 2); // approximation si height non dispo
+    let maxWeeklyLossPct;
+    if (sex === 'female') {
+      maxWeeklyLossPct = weight > 100 ? 0.007 : (weight > 80 ? 0.006 : 0.005);
+    } else {
+      maxWeeklyLossPct = weight > 110 ? 0.01 : (weight > 90 ? 0.008 : 0.007);
+    }
+    const maxWeeklyLoss = weight * maxWeeklyLossPct; // kg/semaine
+
     if (targetWeight && weeks) {
       const weeksDuration = parseInt(weeks) || 12;
-      const weeklyChange = (weight - targetWeight) / weeksDuration; // positive = loss
-      const dailyDeficit = (weeklyChange * 7700) / 7; // kcal/day
+      let weeklyChange = (weight - targetWeight) / weeksDuration; // positive = loss
 
+      // Vérifier si la perte est trop rapide
+      if (weeklyChange > maxWeeklyLoss && goal === 'cut') {
+        const suggestedWeeks = Math.ceil((weight - targetWeight) / maxWeeklyLoss);
+        warnings.push({
+          type: 'too_aggressive',
+          message: `Objectif trop rapide ! Perdre ${weeklyChange.toFixed(2)} kg/semaine est risqué pour ta santé${sex === 'female' ? ' (surtout pour les femmes)' : ''}. On recommande max ${maxWeeklyLoss.toFixed(2)} kg/semaine pour ton profil. Durée idéale : ${suggestedWeeks} semaines minimum.`,
+          suggestedWeeks,
+        });
+        // Cap la perte au maximum sûr
+        weeklyChange = maxWeeklyLoss;
+      }
+
+      const dailyDeficit = (weeklyChange * 7700) / 7;
       let targetCals = Math.round(tdee - dailyDeficit);
 
-      // Safety floor: never below 1200F / 1500H
-      const minCals = sex === 'female' ? 1200 : 1500;
-      targetCals = Math.max(minCals, targetCals);
+      // RÈGLE N°1 : JAMAIS en dessous du BMR
+      if (targetCals < bmr && goal === 'cut') {
+        targetCals = bmr;
+        warnings.push({
+          type: 'below_bmr',
+          message: `Tes calories ont été remontées à ton métabolisme de base (${bmr} kcal). Manger en dessous du BMR ralentit le métabolisme et est contre-productif. Pour atteindre ton objectif, augmente ton activité (plus de pas, plus de séances) plutôt que de manger moins.`,
+        });
+      }
+
+      // Plancher absolu de sécurité (ne devrait plus se déclencher grâce au BMR)
+      const minCals = sex === 'female' ? 1200 : 1400;
+      if (targetCals < minCals) {
+        targetCals = minCals;
+      }
+
+      // Vérifier si les calories sont basses même après correction
+      if (targetCals <= bmr + 100 && goal === 'cut') {
+        warnings.push({
+          type: 'low_calories',
+          message: `Tes calories cibles sont proches du minimum. Pour plus de confort et de résultats, augmente ta dépense : ajoute 2 000 à 4 000 pas/jour ou une séance de sport supplémentaire. Cela te permettra de manger plus tout en perdant du poids.`,
+        });
+      }
 
       // Safety cap for bulk: never more than +25% TDEE
       if (goal === 'bulk') {
@@ -173,15 +223,26 @@ const Calculator = {
       }
 
       const deficitPct = ((targetCals - tdee) / tdee) * 100;
-      return { targetCals, deficitPct };
+      return { targetCals, deficitPct, warnings };
     }
 
     // Fallback: default -20% for cut, +10% for bulk
     if (goal === 'bulk') {
       const pct = sex === 'male' ? 0.10 : 0.08;
-      return { targetCals: Math.round(tdee * (1 + pct)), deficitPct: pct * 100 };
+      return { targetCals: Math.round(tdee * (1 + pct)), deficitPct: pct * 100, warnings };
     }
-    return { targetCals: Math.round(tdee * 0.80), deficitPct: -20 };
+
+    let fallbackCals = Math.round(tdee * 0.80);
+    // Même en fallback, jamais sous le BMR
+    if (fallbackCals < bmr) {
+      fallbackCals = bmr;
+      warnings.push({
+        type: 'below_bmr',
+        message: `Calories remontées au BMR (${bmr} kcal). Augmente ton activité pour créer un déficit plus confortable.`,
+      });
+    }
+    const deficitPct = ((fallbackCals - tdee) / tdee) * 100;
+    return { targetCals: fallbackCals, deficitPct, warnings };
   },
 
   calculateMacros(targetCals, leanMass, bodyFat, weight, sex, goal) {
@@ -232,14 +293,14 @@ const Calculator = {
     const stressAdj = this.calculateStressAdjustment(bmr, stress || 4);
 
     const tdee = Math.round(bmr + neat + eat + tef + sleepAdj + stressAdj);
-    const { targetCals, deficitPct } = this.calculateTargetCalories(tdee, goal, sex, weight, targetWeight, weeks);
+    const { targetCals, deficitPct, warnings } = this.calculateTargetCalories(tdee, goal, sex, weight, targetWeight, weeks, bmr);
     const macros = this.calculateMacros(targetCals, leanMass, bodyFat, weight, sex, goal);
 
     return {
       bodyFat, leanMass, fatMass,
       bmr, neat, eat, tef, sleepAdj, stressAdj,
       tdee, targetCals, deficitPct,
-      macros,
+      macros, warnings: warnings || [],
       bmi: weight / ((height / 100) ** 2),
     };
   },

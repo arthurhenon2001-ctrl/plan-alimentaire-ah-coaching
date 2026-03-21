@@ -7,32 +7,55 @@ const NUTRITION_DB = {
 
   // ── PROTÉINES ──
   protein: [
+    // Volailles
     { id: 'poulet',         name: 'Blanc de poulet',           prot: 31,   gluc: 0,    lip: 3.6,  kcal: 165, tags: [] },
     { id: 'dinde',          name: 'Escalope de dinde',         prot: 29.3, gluc: 0,    lip: 1.5,  kcal: 135, tags: [] },
+    { id: 'cuisse_poulet',  name: 'Cuisse de poulet (sans peau)', prot: 26, gluc: 0,   lip: 5.7,  kcal: 161, tags: [] },
+    { id: 'canard',         name: 'Filet de canard (sans peau)',prot: 24,   gluc: 0,    lip: 4,    kcal: 135, tags: [] },
+    // Viandes rouges
     { id: 'boeuf_5',       name: 'Steak haché 5%',            prot: 21.4, gluc: 0,    lip: 5,    kcal: 137, tags: [] },
     { id: 'boeuf_bavette', name: 'Bœuf (bavette)',            prot: 22,   gluc: 0,    lip: 4,    kcal: 124, tags: [] },
-    { id: 'porc_filet',    name: 'Filet de porc',              prot: 26,   gluc: 0,    lip: 3.5,  kcal: 143, tags: ['porc'] },
+    { id: 'boeuf_rumsteck', name: 'Rumsteck',                  prot: 28.4, gluc: 0,    lip: 3.5,  kcal: 148, tags: [] },
+    { id: 'veau',          name: 'Escalope de veau',           prot: 24.4, gluc: 0,    lip: 2.7,  kcal: 124, tags: [] },
     { id: 'agneau',        name: 'Gigot d\'agneau',            prot: 25,   gluc: 0,    lip: 8,    kcal: 175, tags: [] },
-    { id: 'canard',        name: 'Filet de canard (sans peau)',prot: 24,   gluc: 0,    lip: 4,    kcal: 135, tags: [] },
+    // Porc
+    { id: 'porc_filet',    name: 'Filet de porc',              prot: 26,   gluc: 0,    lip: 3.5,  kcal: 143, tags: ['porc'] },
     { id: 'jambon',        name: 'Jambon blanc',               prot: 19,   gluc: 0.8,  lip: 3.5,  kcal: 115, tags: ['porc'] },
-    { id: 'oeuf',          name: 'Œufs entiers',              prot: 12.6, gluc: 0.7,  lip: 9.5,  kcal: 143, tags: [], unit: 'egg', unitWeight: 55 },
-    { id: 'blanc_oeuf',    name: 'Blanc d\'œuf',              prot: 10.9, gluc: 0.7,  lip: 0.2,  kcal: 52,  tags: [], unit: 'egg', unitWeight: 33 },
+    // Œufs
+    { id: 'oeuf',          name: 'Œufs entiers',              prot: 12.6, gluc: 0.7,  lip: 9.5,  kcal: 143, tags: ['oeuf'], unit: 'egg', unitWeight: 55 },
+    { id: 'blanc_oeuf',    name: 'Blanc d\'œuf',              prot: 10.9, gluc: 0.7,  lip: 0.2,  kcal: 52,  tags: ['oeuf'], unit: 'egg', unitWeight: 33 },
+    // Produits laitiers protéinés
     { id: 'fromage_blanc', name: 'Fromage blanc 0%',           prot: 7.5,  gluc: 3.8,  lip: 0.2,  kcal: 46,  tags: ['laitier'] },
     { id: 'skyr',          name: 'Skyr nature 0%',             prot: 10,   gluc: 3.6,  lip: 0.2,  kcal: 59,  tags: ['laitier'] },
     { id: 'yaourt_grec',   name: 'Yaourt grec nature',         prot: 9,    gluc: 3.6,  lip: 5,    kcal: 97,  tags: ['laitier'] },
     { id: 'cottage',       name: 'Cottage cheese',             prot: 11.1, gluc: 3.4,  lip: 4.3,  kcal: 98,  tags: ['laitier'] },
-    { id: 'tofu',          name: 'Tofu ferme',                 prot: 15.6, gluc: 2.3,  lip: 8.7,  kcal: 144, tags: ['vegan'] },
-    { id: 'tempeh',        name: 'Tempeh',                     prot: 20,   gluc: 7.6,  lip: 10.8, kcal: 192, tags: ['vegan'] },
+    // Protéines végétales
+    { id: 'tofu',          name: 'Tofu ferme',                 prot: 15.6, gluc: 2.3,  lip: 8.7,  kcal: 144, tags: ['vegan', 'soja'] },
+    { id: 'tempeh',        name: 'Tempeh',                     prot: 20,   gluc: 7.6,  lip: 10.8, kcal: 192, tags: ['vegan', 'soja'] },
     { id: 'seitan',        name: 'Seitan',                     prot: 28,   gluc: 6,    lip: 1,    kcal: 150, tags: ['vegan', 'gluten'] },
+    { id: 'edamame',       name: 'Edamame (cuits)',             prot: 11.9, gluc: 8.6,  lip: 5.2,  kcal: 122, tags: ['vegan', 'soja'] },
+    // Poissons
     { id: 'thon',          name: 'Thon en conserve (naturel)', prot: 25.5, gluc: 0,    lip: 1,    kcal: 116, tags: ['poisson'] },
     { id: 'saumon',        name: 'Saumon (filet)',             prot: 20,   gluc: 0,    lip: 13.4, kcal: 208, tags: ['poisson'] },
     { id: 'cabillaud',     name: 'Cabillaud (filet)',          prot: 17.8, gluc: 0,    lip: 0.7,  kcal: 82,  tags: ['poisson'] },
-    { id: 'crevettes',     name: 'Crevettes cuites',           prot: 20.9, gluc: 0.2,  lip: 1.7,  kcal: 99,  tags: ['crustace'] },
-    { id: 'gambas',        name: 'Gambas',                     prot: 18,   gluc: 0,    lip: 1.2,  kcal: 85,  tags: ['crustace'] },
     { id: 'truite',        name: 'Truite',                     prot: 20,   gluc: 0,    lip: 6.6,  kcal: 141, tags: ['poisson'] },
     { id: 'sardines',      name: 'Sardines en conserve',        prot: 24.6, gluc: 0,    lip: 11.5, kcal: 208, tags: ['poisson'] },
+    { id: 'colin',         name: 'Colin / Merlu',               prot: 18.3, gluc: 0,    lip: 0.9,  kcal: 82,  tags: ['poisson'] },
+    { id: 'maquereau',     name: 'Maquereau',                   prot: 18.6, gluc: 0,    lip: 13.9, kcal: 205, tags: ['poisson'] },
+    { id: 'bar',           name: 'Bar / Loup de mer',           prot: 18.4, gluc: 0,    lip: 2.3,  kcal: 97,  tags: ['poisson'] },
+    { id: 'sole',          name: 'Sole',                        prot: 17.5, gluc: 0,    lip: 1.2,  kcal: 86,  tags: ['poisson'] },
+    { id: 'dorade',        name: 'Dorade',                      prot: 19.7, gluc: 0,    lip: 2.7,  kcal: 105, tags: ['poisson'] },
+    { id: 'saumon_fume',   name: 'Saumon fumé',                 prot: 22.5, gluc: 0,    lip: 8.4,  kcal: 171, tags: ['poisson'] },
+    { id: 'thon_frais',    name: 'Thon frais (steak)',          prot: 23.3, gluc: 0,    lip: 4.9,  kcal: 144, tags: ['poisson'] },
+    // Crustacés & fruits de mer
+    { id: 'crevettes',     name: 'Crevettes cuites',           prot: 20.9, gluc: 0.2,  lip: 1.7,  kcal: 99,  tags: ['crustace'] },
+    { id: 'gambas',        name: 'Gambas',                     prot: 18,   gluc: 0,    lip: 1.2,  kcal: 85,  tags: ['crustace'] },
     { id: 'moules',        name: 'Moules cuites',              prot: 12,   gluc: 3.7,  lip: 2.2,  kcal: 86,  tags: ['crustace'] },
     { id: 'calamar',       name: 'Calamar',                    prot: 15.6, gluc: 3.1,  lip: 1.4,  kcal: 92,  tags: ['crustace'] },
+    { id: 'noix_stj',      name: 'Noix de Saint-Jacques',       prot: 16.8, gluc: 3.2,  lip: 0.8,  kcal: 88,  tags: ['crustace'] },
+    { id: 'homard',        name: 'Homard',                      prot: 20.5, gluc: 0,    lip: 1.5,  kcal: 97,  tags: ['crustace'] },
+    { id: 'crabe',         name: 'Crabe',                       prot: 18.1, gluc: 0,    lip: 1.1,  kcal: 83,  tags: ['crustace'] },
+    // Compléments
     { id: 'whey',          name: 'Whey protéine (1 dose)',     prot: 80,   gluc: 6.7,  lip: 5,    kcal: 400, tags: ['laitier'], unit: 'dose', unitWeight: 30 },
   ],
 
@@ -58,6 +81,10 @@ const NUTRITION_DB = {
     { id: 'pain_pita',     name: 'Pain pita complet',          prot: 9.8,  gluc: 55,   lip: 1.2, kcal: 266, tags: ['gluten'], unit: 'pita', unitWeight: 60 },
     { id: 'vermicelles',   name: 'Vermicelles de riz (cuits)', prot: 0.9,  gluc: 25.9, lip: 0.2, kcal: 109, tags: [] },
     { id: 'soba',          name: 'Nouilles soba (cuites)',     prot: 5.1,  gluc: 21.4, lip: 0.1, kcal: 99,  tags: ['gluten'] },
+    { id: 'mais',          name: 'Maïs (cuit)',                prot: 3.4,  gluc: 19,   lip: 1.5, kcal: 96,  tags: [] },
+    { id: 'muesli',        name: 'Muesli sans sucre ajouté',   prot: 10,   gluc: 63,   lip: 7.5, kcal: 363, tags: ['gluten'] },
+    { id: 'sarrasin',      name: 'Sarrasin (cuit)',             prot: 3.4,  gluc: 19.9, lip: 0.6, kcal: 92,  tags: [] },
+    { id: 'ble_ebly',      name: 'Blé type Ebly (cuit)',       prot: 4.7,  gluc: 25.5, lip: 0.5, kcal: 126, tags: ['gluten'] },
   ],
 
   // ── MATIÈRES GRASSES ──
@@ -126,6 +153,8 @@ const ALLERGY_FILTERS = {
   arachide:        { label: 'Sans arachide',         excludeTags: ['arachide'] },
   crustace:        { label: 'Sans crustacés',        excludeTags: ['crustace'] },
   poisson:         { label: 'Sans poisson',          excludeTags: ['poisson'] },
+  oeuf:            { label: 'Sans œufs',             excludeTags: ['oeuf'] },
+  soja:            { label: 'Sans soja',             excludeTags: ['soja'] },
   porc:            { label: 'Sans porc',             excludeTags: ['porc'] },
 };
 
