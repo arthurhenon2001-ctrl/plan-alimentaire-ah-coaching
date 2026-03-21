@@ -194,27 +194,30 @@ const Calculator = {
       const dailyDeficit = (weeklyChange * 7700) / 7;
       let targetCals = Math.round(tdee - dailyDeficit);
 
-      // RÈGLE N°1 : JAMAIS en dessous du BMR
-      if (targetCals < bmr && goal === 'cut') {
-        targetCals = bmr;
-        warnings.push({
-          type: 'below_bmr',
-          message: `Tes calories ont été remontées à ton métabolisme de base (${bmr} kcal). Manger en dessous du BMR ralentit le métabolisme et est contre-productif. Pour atteindre ton objectif, augmente ton activité (plus de pas, plus de séances) plutôt que de manger moins.`,
-        });
-      }
+      // Plancher minimum viable : le plus haut entre (BMR + 200) et le minimum absolu
+      const absoluteMin = sex === 'female' ? 1200 : 1400;
+      const safeFloor = Math.max(absoluteMin, bmr + 200);
 
-      // Plancher absolu de sécurité (ne devrait plus se déclencher grâce au BMR)
-      const minCals = sex === 'female' ? 1200 : 1400;
-      if (targetCals < minCals) {
-        targetCals = minCals;
-      }
+      if (targetCals < safeFloor && goal === 'cut') {
+        // Calculer ce qui est réellement possible avec ce plancher
+        const maxPossibleDeficit = tdee - safeFloor;
+        const maxPossibleWeeklyLoss = (maxPossibleDeficit * 7) / 7700;
 
-      // Vérifier si les calories sont basses même après correction
-      if (targetCals <= bmr + 100 && goal === 'cut') {
-        warnings.push({
-          type: 'low_calories',
-          message: `Tes calories cibles sont proches du minimum. Pour plus de confort et de résultats, augmente ta dépense : ajoute 2 000 à 4 000 pas/jour ou une séance de sport supplémentaire. Cela te permettra de manger plus tout en perdant du poids.`,
-        });
+        if (maxPossibleDeficit <= 0) {
+          // TDEE trop bas — impossible de créer un déficit sûr
+          targetCals = tdee;
+          warnings.push({
+            type: 'impossible',
+            message: `Cet objectif n'est pas réalisable dans tes conditions actuelles. Ta dépense (${tdee} kcal) est trop proche de ton métabolisme de base (${bmr} kcal) pour créer un déficit en sécurité. Tu dois d'abord augmenter ton activité physique (plus de pas, plus de séances, moins de sédentarité) pour augmenter ta dépense, et ensuite on pourra créer un déficit confortable.`,
+          });
+        } else {
+          targetCals = safeFloor;
+          const suggestedWeeksFromFloor = Math.ceil((weight - targetWeight) / maxPossibleWeeklyLoss);
+          warnings.push({
+            type: 'below_bmr',
+            message: `Ton objectif initial nécessitait de manger en dessous de ton métabolisme de base (${bmr} kcal), ce qui est dangereux et contre-productif. On t'a mis à ${safeFloor} kcal (minimum viable). À ce rythme, tu peux perdre ~${maxPossibleWeeklyLoss.toFixed(2)} kg/semaine, soit ${suggestedWeeksFromFloor} semaines pour atteindre ton objectif. Pour aller plus vite, augmente ta dépense : ajoute 2 000 à 4 000 pas/jour ou une séance supplémentaire.`,
+          });
+        }
       }
 
       // Safety cap for bulk: never more than +25% TDEE
@@ -233,12 +236,12 @@ const Calculator = {
     }
 
     let fallbackCals = Math.round(tdee * 0.80);
-    // Même en fallback, jamais sous le BMR
-    if (fallbackCals < bmr) {
-      fallbackCals = bmr;
+    const fallbackFloor = Math.max(sex === 'female' ? 1200 : 1400, bmr + 200);
+    if (fallbackCals < fallbackFloor) {
+      fallbackCals = fallbackFloor;
       warnings.push({
         type: 'below_bmr',
-        message: `Calories remontées au BMR (${bmr} kcal). Augmente ton activité pour créer un déficit plus confortable.`,
+        message: `Calories remontées à ${fallbackFloor} kcal (minimum viable au-dessus de ton BMR de ${bmr} kcal). Augmente ton activité pour créer un déficit plus confortable.`,
       });
     }
     const deficitPct = ((fallbackCals - tdee) / tdee) * 100;

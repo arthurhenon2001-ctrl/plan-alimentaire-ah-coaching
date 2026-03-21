@@ -639,12 +639,15 @@ function renderMetaboResults(r) {
     ${r.deficitPct < 0 ? `<div class="deficit-info">Déficit de ${Math.abs(r.deficitPct).toFixed(0)}% (−${Math.abs(r.tdee - r.targetCals)} kcal/jour)</div>` : ''}
     ${r.deficitPct > 0 ? `<div class="deficit-info">Surplus de +${r.deficitPct.toFixed(0)}% (+${r.targetCals - r.tdee} kcal/jour)</div>` : ''}
     ${state.targetWeight ? `<div class="deficit-info" style="margin-top:6px">Objectif : ${state.weight} kg → ${state.targetWeight} kg en ${state.weeks} semaines</div>` : ''}
-    ${(r.warnings && r.warnings.length > 0) ? r.warnings.map(w => `
-      <div class="warning-box ${w.type === 'below_bmr' ? 'warning-danger' : (w.type === 'too_aggressive' ? 'warning-danger' : 'warning-info')}">
-        <strong>${w.type === 'below_bmr' ? '⛔' : (w.type === 'too_aggressive' ? '⚠️' : '💡')} ${w.type === 'below_bmr' ? 'Protection métabolique' : (w.type === 'too_aggressive' ? 'Objectif trop ambitieux' : 'Conseil')}</strong>
+    ${(r.warnings && r.warnings.length > 0) ? r.warnings.map(w => {
+      const isDanger = ['impossible', 'below_bmr', 'too_aggressive'].includes(w.type);
+      const icons = { impossible: '🚫', below_bmr: '⛔', too_aggressive: '⚠️', low_calories: '💡' };
+      const titles = { impossible: 'Objectif non réalisable', below_bmr: 'Protection métabolique', too_aggressive: 'Objectif trop ambitieux', low_calories: 'Conseil' };
+      return `<div class="warning-box ${isDanger ? 'warning-danger' : 'warning-info'}">
+        <strong>${icons[w.type] || '💡'} ${titles[w.type] || 'Info'}</strong>
         <p>${w.message}</p>
-      </div>
-    `).join('') : ''}
+      </div>`;
+    }).join('') : ''}
   `;
 }
 
