@@ -824,6 +824,22 @@ function buildMealCardHTML(meal, mealIndex, constraints, dayIndex) {
     const isSkipped = slot.skipped === true;
     const canSkip = slot.type !== 'protein'; // On ne peut pas skip la protéine
 
+    // Ratio slider : affiché AVANT le 2e slot d'une paire (entre les 2 sources)
+    if (slot.siblingIndex !== null && slot.siblingIndex !== undefined && slot.siblingIndex < si) {
+      const firstSlot = meal.slots[slot.siblingIndex];
+      const pct = firstSlot.splitPct || 50;
+      html += `<div class="ratio-slider-wrap">
+        <div class="ratio-labels">
+          <span class="ratio-label-left">${firstSlot.label}</span>
+          <span class="ratio-value" id="ratio-val-${mealIndex}-${slot.siblingIndex}">${pct}% / ${100 - pct}%</span>
+          <span class="ratio-label-right">${slot.label}</span>
+        </div>
+        <input type="range" class="ratio-slider" min="20" max="80" step="5" value="${pct}"
+          data-meal="${mealIndex}" data-slot="${slot.siblingIndex}"
+          oninput="onRatioChange(this)">
+      </div>`;
+    }
+
     html += `<div class="slot ${isSkipped ? 'slot-skipped' : ''}">`;
     html += `<div class="slot-header">
       <span class="slot-dot" style="background:${slot.color}"></span>
@@ -858,21 +874,6 @@ function buildMealCardHTML(meal, mealIndex, constraints, dayIndex) {
       // Bouton "+" pour ajouter une 2e source (seulement si pas déjà un sibling)
       if (slot.siblingIndex === null || slot.siblingIndex === undefined) {
         html += `<button class="add-source-btn" onclick="addSecondSource(${mealIndex}, ${si})">+ Ajouter une 2e source</button>`;
-      }
-
-      // Ratio slider : affiché sur le PREMIER slot d'une paire (celui dont siblingIndex pointe vers un slot après lui)
-      if (slot.siblingIndex !== null && slot.siblingIndex !== undefined && slot.siblingIndex > si) {
-        const pct = slot.splitPct || 50;
-        html += `<div class="ratio-slider-wrap">
-          <div class="ratio-labels">
-            <span class="ratio-label-left">${slot.label}</span>
-            <span class="ratio-value" id="ratio-val-${mealIndex}-${si}">${pct}% / ${100 - pct}%</span>
-            <span class="ratio-label-right">${meal.slots[slot.siblingIndex].label}</span>
-          </div>
-          <input type="range" class="ratio-slider" min="20" max="80" step="5" value="${pct}"
-            data-meal="${mealIndex}" data-slot="${si}"
-            oninput="onRatioChange(this)">
-        </div>`;
       }
     }
 

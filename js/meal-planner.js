@@ -125,19 +125,30 @@ const MealPlanner = {
       splitPct: 50,
     };
 
-    // Mettre à jour le slot original : 50% du target
-    originalSlot.splitPct = 50;
-    originalSlot.target = Math.round((originalSlot.target / (originalSlot.splitPct / 100 || 1)) * 0.5);
-    originalSlot.siblingIndex = meal.slots.length;
-
     // Recalculer les targets après split
     const totalMacro = originalSlot.macro === 'prot' ? meal.macroDisplay.prot :
                        originalSlot.macro === 'gluc' ? meal.macroDisplay.gluc : meal.macroDisplay.lip;
+    originalSlot.splitPct = 50;
     originalSlot.target = Math.round(totalMacro * 0.5);
     newSlot.target = Math.round(totalMacro * 0.5);
 
-    meal.slots.push(newSlot);
-    return meal.slots.length - 1;
+    // Insérer juste APRÈS le slot original (pas à la fin)
+    const insertAt = slotIndex + 1;
+    meal.slots.splice(insertAt, 0, newSlot);
+
+    // Mettre à jour les siblingIndex (l'insertion a décalé les index)
+    originalSlot.siblingIndex = insertAt;
+    newSlot.siblingIndex = slotIndex;
+
+    // Mettre à jour les siblingIndex des autres paires qui ont été décalées
+    meal.slots.forEach((s, i) => {
+      if (i === slotIndex || i === insertAt) return;
+      if (s.siblingIndex !== null && s.siblingIndex !== undefined && s.siblingIndex >= insertAt) {
+        s.siblingIndex++;
+      }
+    });
+
+    return insertAt;
   },
 
   /**
