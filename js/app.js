@@ -856,8 +856,23 @@ function buildMealCardHTML(meal, mealIndex, constraints, dayIndex) {
       html += `<div class="result-box" id="result-${mealIndex}-${si}" style="display:none"></div>`;
 
       // Bouton "+" pour ajouter une 2e source (seulement si pas déjà un sibling)
-      if (!slot.siblingIndex && slot.siblingIndex !== 0) {
+      if (slot.siblingIndex === null || slot.siblingIndex === undefined) {
         html += `<button class="add-source-btn" onclick="addSecondSource(${mealIndex}, ${si})">+ Ajouter une 2e source</button>`;
+      }
+
+      // Ratio slider : affiché sur le PREMIER slot d'une paire (celui dont siblingIndex pointe vers un slot après lui)
+      if (slot.siblingIndex !== null && slot.siblingIndex !== undefined && slot.siblingIndex > si) {
+        const pct = slot.splitPct || 50;
+        html += `<div class="ratio-slider-wrap">
+          <div class="ratio-labels">
+            <span class="ratio-label-left">${slot.label}</span>
+            <span class="ratio-value" id="ratio-val-${mealIndex}-${si}">${pct}% / ${100 - pct}%</span>
+            <span class="ratio-label-right">${meal.slots[slot.siblingIndex].label}</span>
+          </div>
+          <input type="range" class="ratio-slider" min="20" max="80" step="5" value="${pct}"
+            data-meal="${mealIndex}" data-slot="${si}"
+            oninput="onRatioChange(this)">
+        </div>`;
       }
     }
 
@@ -920,6 +935,49 @@ function addSecondSource(mealIndex, slotIndex) {
   if (newIdx < 0) return;
 
   // Re-render le plan complet
+  const constraints = { allergies: state.allergies, diet: state.diet, excludedIds: state.excludedFoods };
+  if (state.planDays === 7) {
+    renderWeekPlan(constraints);
+  } else {
+    renderPlan(state.meals, constraints);
+  }
+  updateRecapBar(state.meals);
+  Storage.save(state);
+}
+
+/**
+ * Callback quand le ratio slider change
+ */
+function onRatioChange(slider) {
+  const mi = parseInt(slider.dataset.meal);
+  const si = parseInt(slider.dataset.slot);
+  const pct = parseInt(slider.value);
+  const meal = state.meals[mi];
+
+  MealPlanner.updateSplitRatio(meal, si, pct);
+
+  // Update label
+  const label = document.getElementById(`ratio-val-${mi}-${si}`);
+  if (label) label.textContent = `${pct}% / ${100 - pct}%`;
+
+  // Update badges
+  const slot = meal.slots[si];
+  const sibling = meal.slots[slot.siblingIndex];
+  const macroName = slot.macro === 'prot' ? 'protéines' : (slot.macro === 'gluc' ? 'glucides' : 'lipides');
+
+  // Update target badges in DOM
+  const badges = document.querySelectorAll(`[data-meal="${mi}"] .slot`);
+  // Simpler: just recalc quantities and re-render result boxes
+  if (slot.selectedFood) {
+    slot.quantity = MealPlanner.calculateQuantity(slot.selectedFood, slot.macro, slot.target);
+    updateMealSlotDisplays(mi);
+  }
+  if (sibling && sibling.selectedFood) {
+    sibling.quantity = MealPlanner.calculateQuantity(sibling.selectedFood, sibling.macro, sibling.target);
+    updateMealSlotDisplays(mi);
+  }
+
+  // Re-render for clean state
   const constraints = { allergies: state.allergies, diet: state.diet, excludedIds: state.excludedFoods };
   if (state.planDays === 7) {
     renderWeekPlan(constraints);

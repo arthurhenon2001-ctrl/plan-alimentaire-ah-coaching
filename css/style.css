@@ -989,6 +989,54 @@ body {
   background: var(--beige);
 }
 
+.ratio-slider-wrap {
+  margin: 10px 0 4px;
+  padding: 10px 12px;
+  background: var(--beige);
+  border-radius: 10px;
+}
+
+.ratio-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+
+.ratio-label-left, .ratio-label-right {
+  color: var(--gray);
+  font-weight: 500;
+}
+
+.ratio-value {
+  font-weight: 700;
+  color: var(--brown-dark);
+  font-size: 12px;
+}
+
+.ratio-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, var(--gold) 0%, var(--gold) var(--pct, 50%), var(--green) var(--pct, 50%), var(--green) 100%);
+  outline: none;
+}
+
+.ratio-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--brown);
+  cursor: pointer;
+  border: 2px solid var(--white);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
 .regen-meal-btn {
   width: 100%;
   margin-top: 16px;
