@@ -1465,6 +1465,28 @@ const SHOPPING_CATEGORIES = {
   other:   { label: 'Autres',                          icon: '📦', order: 6 },
 };
 
+// Ratios de conversion cuit → cru pour les courses
+// Quand l'aliment est pesé cuit dans le plan, on convertit en poids cru pour l'achat
+const COOKED_TO_RAW = {
+  riz_blanc:       { ratio: 0.40, rawName: 'Riz basmati (cru)' },
+  riz_complet:     { ratio: 0.38, rawName: 'Riz complet (cru)' },
+  pates:           { ratio: 0.45, rawName: 'Pâtes (crues)' },
+  quinoa:          { ratio: 0.37, rawName: 'Quinoa (cru)' },
+  semoule:         { ratio: 0.40, rawName: 'Couscous / Semoule (cru)' },
+  boulgour:        { ratio: 0.40, rawName: 'Boulgour (cru)' },
+  lentilles:       { ratio: 0.42, rawName: 'Lentilles (crues)' },
+  pois_chiches:    { ratio: 0.45, rawName: 'Pois chiches (crus/secs)' },
+  haricots_rouges: { ratio: 0.45, rawName: 'Haricots rouges (crus/secs)' },
+  haricots_noirs:  { ratio: 0.45, rawName: 'Haricots noirs (crus/secs)' },
+  soba:            { ratio: 0.45, rawName: 'Nouilles soba (crues)' },
+  vermicelles:     { ratio: 0.40, rawName: 'Vermicelles de riz (crus)' },
+  sarrasin:        { ratio: 0.38, rawName: 'Sarrasin (cru)' },
+  mais:            { ratio: 0.50, rawName: 'Maïs (conserve égouttée)' },
+  edamame:         { ratio: 0.85, rawName: 'Edamame (surgelés)' },
+  pdt:             { ratio: 0.85, rawName: 'Pommes de terre (crues)' },
+  patate_douce:    { ratio: 0.85, rawName: 'Patate douce (crue)' },
+};
+
 function renderShoppingList() {
   const wrap = document.getElementById('shoppingListWrap');
   const listEl = document.getElementById('shoppingList');
@@ -1540,23 +1562,33 @@ function renderShoppingList() {
     groups[cat].sort((a, b) => a.name.localeCompare(b.name));
     groups[cat].forEach(item => {
       let qtyDisplay = '';
-      if (item.totalQty > 0) {
-        if (item.unitWeight && item.unit !== 'g') {
-          const units = Math.ceil(item.totalQty / item.unitWeight);
+      let displayName = item.name;
+
+      // Conversion cuit → cru pour la liste de courses
+      const conversion = COOKED_TO_RAW[item.id];
+      let rawQty = item.totalQty;
+      if (conversion && item.totalQty > 0) {
+        rawQty = item.totalQty * conversion.ratio;
+        displayName = conversion.rawName;
+      }
+
+      if (rawQty > 0) {
+        if (item.unitWeight && item.unit !== 'g' && !conversion) {
+          const units = Math.ceil(rawQty / item.unitWeight);
           const unitLabel = item.unit === 'egg' ? (units > 1 ? 'oeufs' : 'oeuf') :
                            item.unit === 'dose' ? (units > 1 ? 'doses' : 'dose') :
                            item.unit + (units > 1 ? 's' : '');
-          qtyDisplay = `~${Math.round(item.totalQty)}g (${units} ${unitLabel})`;
+          qtyDisplay = `~${Math.round(rawQty)}g (${units} ${unitLabel})`;
         } else {
           // Arrondir aux 50g pour des courses réalistes
-          const rounded = Math.ceil(item.totalQty / 50) * 50;
+          const rounded = Math.ceil(rawQty / 50) * 50;
           qtyDisplay = `~${rounded}g`;
         }
       }
 
       html += `<label class="shop-item">
         <input type="checkbox" class="shop-check">
-        <span class="shop-name">${item.name}</span>
+        <span class="shop-name">${displayName}</span>
         ${qtyDisplay ? `<span class="shop-qty">${qtyDisplay}</span>` : ''}
         ${item.note ? `<span class="shop-note">${item.note}</span>` : ''}
       </label>`;
