@@ -300,9 +300,13 @@ const MealPlanner = {
       }
     });
 
-    // Étape 2 : compensation croisée itérative
-    // Les protéines apportent souvent des lip/gluc → ajuster les autres slots
-    for (let pass = 0; pass < 8; pass++) {
+    // Étape 2 : compensation croisée itérative AVEC planchers
+    // Principe : chaque slot garde au minimum 30% de sa quantité initiale
+    // pour éviter des résultats absurdes (0g de noix, 1g de beurre cacahuète)
+    const initialQuantities = {};
+    activeSlots.forEach(s => { initialQuantities[s.type + '_' + (s.siblingIndex || '')] = s.quantity; });
+
+    for (let pass = 0; pass < 6; pass++) {
       const totals = { prot: 0, gluc: 0, lip: 0 };
       activeSlots.forEach(slot => {
         if (!slot.selectedFood || slot.quantity <= 0) return;
@@ -314,26 +318,30 @@ const MealPlanner = {
 
       let converged = true;
 
-      // Pour chaque macro en excès, réduire proportionnellement les slots qui le ciblent
+      // Pour chaque macro en excès, réduire les slots NON-PRIORITAIRES qui le ciblent
+      // Priorité : protéine > gluc > lip (on ne touche pas aux protéines sauf en dernier)
       ['lip', 'gluc', 'prot'].forEach(macro => {
         const excess = totals[macro] - targets[macro];
-        if (excess <= 2) return; // Tolérance 2g
+        if (excess <= 3) return; // Tolérance 3g
 
         converged = false;
         const primarySlots = activeSlots.filter(s => s.macro === macro && s.quantity > 0);
         if (primarySlots.length === 0) return;
 
-        // Répartir la réduction proportionnellement aux quantités actuelles
         const totalQty = primarySlots.reduce((sum, s) => sum + s.quantity, 0);
         primarySlots.forEach(slot => {
           const macroPer100 = macro === 'prot' ? slot.selectedFood.prot :
                               macro === 'gluc' ? slot.selectedFood.gluc : slot.selectedFood.lip;
           if (macroPer100 <= 0) return;
 
+          const key = slot.type + '_' + (slot.siblingIndex || '');
+          const initQ = initialQuantities[key] || slot.quantity;
+          const minQ = Math.max(initQ * 0.30, this.MIN_QUANTITIES[slot.type] || 10);
+
           const share = slot.quantity / totalQty;
-          const reductionG = excess * share;
+          const reductionG = excess * share * 0.7; // Réduire de 70% de l'excès (pas 100% pour converger en douceur)
           const reductionQty = (reductionG / macroPer100) * 100;
-          slot.quantity = Math.max(0, slot.quantity - reductionQty);
+          slot.quantity = Math.max(minQ, slot.quantity - reductionQty);
         });
       });
 
@@ -342,7 +350,8 @@ const MealPlanner = {
 
     // Étape 3 : arrondir et gérer les unités
     activeSlots.forEach(slot => {
-      slot.quantity = Math.max(0, Math.round(slot.quantity));
+      const minQ = this.MIN_QUANTITIES[slot.type] || 10;
+      slot.quantity = Math.max(minQ, Math.round(slot.quantity));
 
       if (slot.selectedFood && slot.selectedFood.unitWeight && slot.quantity > 0) {
         const units = Math.max(1, Math.round(slot.quantity / slot.selectedFood.unitWeight));
