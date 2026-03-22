@@ -531,6 +531,8 @@ function checkGoalSafety() {
   const weeksDuration = parseInt(weeks) || 12;
   const weeklyChange = weightDiff / weeksDuration;
 
+  let _tempRaisonnable = null; // sera ajouté seulement si pas de warning grave
+
   if (goal === 'cut' || (goal !== 'bulk' && targetWeight < weight)) {
     // ── PERTE DE POIDS ──
 
@@ -552,11 +554,13 @@ function checkGoalSafety() {
         text: `${weeklyChange.toFixed(1)} kg/semaine (${pctPerWeek.toFixed(1)}% de ton poids). C'est faisable mais agressif — tu risques de perdre du muscle et d'avoir faim. Augmente la durée si possible.`,
       });
     } else if (pctPerWeek >= 0.5) {
-      alerts.push({
+      // Le message "raisonnable" ne s'affiche que si le calcul complet ne génère pas de warning
+      // (la cohérence est assurée par le check #3 ci-dessous qui utilise Calculator)
+      _tempRaisonnable = {
         type: 'info',
         title: 'Rythme de perte raisonnable',
         text: `${weeklyChange.toFixed(1)} kg/semaine — c'est un bon rythme pour préserver ton muscle et tenir sur la durée.`,
-      });
+      };
     }
 
     // 2. Poids cible trop bas (IMC < 18.5)
@@ -569,24 +573,40 @@ function checkGoalSafety() {
       });
     }
 
-    // 3. Calories qui seraient trop basses
-    if (weight && age && height) {
-      const roughBMR = sex === 'male'
-        ? 10 * weight + 6.25 * height - 5 * age + 5
-        : 10 * weight + 6.25 * height - 5 * age - 161;
-      const deficitForRate = weeklyChange * 7700 / 7; // kcal/day deficit needed
-      const roughTDEE = roughBMR * 1.4; // rough estimate
-      const estimatedCals = roughTDEE - deficitForRate;
-      const minCals = sex === 'female' ? 1200 : 1500;
+    // 3. Vérifier si les calories résultantes seraient viables
+    // On utilise le MÊME Calculator que l'étape 5 pour être cohérent
+    if (weight && age && height && typeof Calculator !== 'undefined') {
+      try {
+        const previewResult = Calculator.compute(state);
+        const { bmr, tdee, targetCals, warnings } = previewResult;
 
-      if (estimatedCals < minCals) {
-        alerts.push({
-          type: 'danger',
-          title: 'Calories trop basses',
-          text: `Pour perdre à ce rythme, il faudrait descendre à ~${Math.round(estimatedCals)} kcal/jour, ce qui est en dessous du minimum recommandé de ${minCals} kcal. Cela entraîne des carences, une baisse du métabolisme et des troubles hormonaux.`,
-          suggestion: `Augmente la durée pour rester au-dessus de ${minCals} kcal/jour.`,
-        });
+        if (warnings && warnings.length > 0) {
+          warnings.forEach(w => {
+            if (w.type === 'below_bmr' || w.type === 'impossible') {
+              alerts.push({
+                type: 'danger',
+                title: 'Objectif non réalisable en sécurité',
+                text: w.message,
+              });
+            } else if (w.type === 'too_aggressive') {
+              // Déjà géré par le check pctPerWeek ci-dessus — éviter la redondance
+            }
+          });
+        } else if (targetCals < bmr + 200) {
+          alerts.push({
+            type: 'warning',
+            title: 'Calories serrées',
+            text: `Tes calories cibles (${targetCals} kcal) sont proches de ton métabolisme de base (${bmr} kcal). Pense à augmenter ton activité pour plus de confort.`,
+          });
+        }
+      } catch(e) {
+        // Fallback silencieux si le calcul échoue
       }
+    }
+
+    // Ajouter "raisonnable" seulement s'il n'y a pas d'alerte danger/warning
+    if (_tempRaisonnable && !alerts.some(a => a.type === 'danger' || a.type === 'warning')) {
+      alerts.push(_tempRaisonnable);
     }
   }
 
