@@ -208,49 +208,29 @@ const MealPlanner = {
       lip: meal.macroDisplay.lip,
     };
 
-    // Trier : protéine d'abord, puis glucides, puis lipides
-    const sortOrder = { prot: 0, gluc: 1, lip: 2 };
-    const sorted = [...activeSlots].sort((a, b) => (sortOrder[a.macro] || 3) - (sortOrder[b.macro] || 3));
-
-    // Remaining budget pour chaque macro
-    const remaining = { ...targets };
-
-    // Étape 1 : Calculer séquentiellement, en soustrayant les contributions croisées
-    sorted.forEach(slot => {
+    // Étape 1 : quantité initiale basée sur slot.target (déjà splitté pour carb/fruit)
+    activeSlots.forEach(slot => {
+      if (!slot.selectedFood) return;
       const food = slot.selectedFood;
       const macro = slot.macro;
-
-      // Combien de ce macro reste à combler ?
-      const macroNeeded = Math.max(0, remaining[macro]);
-
-      // Calcul de la quantité pour atteindre le macro needed
       const macroPer100 = macro === 'prot' ? food.prot : macro === 'gluc' ? food.gluc : food.lip;
+
       if (macroPer100 <= 0) {
         slot.quantity = this.MIN_QUANTITIES[slot.type] || 10;
       } else {
-        slot.quantity = (macroNeeded / macroPer100) * 100;
-      }
-
-      // Si le budget de ce macro est déjà dépassé, quantité = 0
-      // Sinon appliquer le minimum adapté
-      if (macroNeeded <= 0) {
-        slot.quantity = 0;
-      } else {
-        const minQ = macro === 'lip' ? 5 : (this.MIN_QUANTITIES[slot.type] || 10);
+        // Utiliser slot.target (qui respecte le split carb/fruit)
+        slot.quantity = (slot.target / macroPer100) * 100;
+        const minQ = this.MIN_QUANTITIES[slot.type] || 10;
         slot.quantity = Math.max(minQ, slot.quantity);
       }
-
-      // Soustraire TOUTES les macros apportées par cet aliment du budget restant
-      const actual = this.computeActualMacros(food, slot.quantity);
-      remaining.prot -= actual.prot;
-      remaining.gluc -= actual.gluc;
-      remaining.lip -= actual.lip;
     });
 
-    // Étape 2 : Si un macro est en excès (remaining < 0), réduire les slots secondaires
-    for (let pass = 0; pass < 5; pass++) {
+    // Étape 2 : compensation croisée itérative
+    // Les protéines apportent souvent des lip/gluc → ajuster les autres slots
+    for (let pass = 0; pass < 8; pass++) {
       const totals = { prot: 0, gluc: 0, lip: 0 };
       activeSlots.forEach(slot => {
+        if (!slot.selectedFood || slot.quantity <= 0) return;
         const actual = this.computeActualMacros(slot.selectedFood, slot.quantity);
         totals.prot += actual.prot;
         totals.gluc += actual.gluc;
@@ -258,30 +238,28 @@ const MealPlanner = {
       });
 
       let converged = true;
+
+      // Pour chaque macro en excès, réduire proportionnellement les slots qui le ciblent
       ['lip', 'gluc', 'prot'].forEach(macro => {
         const excess = totals[macro] - targets[macro];
-        if (excess <= 2) return; // Tolérance de 2g
+        if (excess <= 2) return; // Tolérance 2g
 
         converged = false;
-        // Trouver le slot principal pour ce macro et réduire
-        const primarySlots = activeSlots.filter(s => s.macro === macro);
+        const primarySlots = activeSlots.filter(s => s.macro === macro && s.quantity > 0);
+        if (primarySlots.length === 0) return;
+
+        // Répartir la réduction proportionnellement aux quantités actuelles
+        const totalQty = primarySlots.reduce((sum, s) => sum + s.quantity, 0);
         primarySlots.forEach(slot => {
           const macroPer100 = macro === 'prot' ? slot.selectedFood.prot :
                               macro === 'gluc' ? slot.selectedFood.gluc : slot.selectedFood.lip;
           if (macroPer100 <= 0) return;
 
-          const reductionG = (excess / primarySlots.length);
+          const share = slot.quantity / totalQty;
+          const reductionG = excess * share;
           const reductionQty = (reductionG / macroPer100) * 100;
           slot.quantity = Math.max(0, slot.quantity - reductionQty);
         });
-
-        // Si pas de slot principal (ex: excès de lip venant des protéines), réduire le slot lip à son min
-        if (primarySlots.length === 0) {
-          const lipSlots = activeSlots.filter(s => s.macro === 'lip');
-          lipSlots.forEach(s => {
-            s.quantity = 5; // minimum absolu
-          });
-        }
       });
 
       if (converged) break;
@@ -291,7 +269,7 @@ const MealPlanner = {
     activeSlots.forEach(slot => {
       slot.quantity = Math.max(0, Math.round(slot.quantity));
 
-      if (slot.selectedFood.unitWeight) {
+      if (slot.selectedFood && slot.selectedFood.unitWeight && slot.quantity > 0) {
         const units = Math.max(1, Math.round(slot.quantity / slot.selectedFood.unitWeight));
         slot.quantity = units * slot.selectedFood.unitWeight;
       }

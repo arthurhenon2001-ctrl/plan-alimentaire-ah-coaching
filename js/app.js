@@ -851,13 +851,34 @@ function buildMealCardHTML(meal, mealIndex, constraints, dayIndex) {
       }
     } else {
       // Mode équivalences : dropdown
-      const foods = filterFoods(slot.dbCategory, constraints);
+      let foods = filterFoods(slot.dbCategory, constraints);
+
+      // Pour le petit-déjeuner, trier les protéines : laitier/œufs/whey en premier
+      const isBreakfast = meal.id === 'breakfast';
+      if (isBreakfast && slot.dbCategory === 'protein') {
+        const breakfastIds = ['skyr', 'fromage_blanc', 'yaourt_grec', 'cottage', 'oeuf', 'blanc_oeuf', 'whey'];
+        const breakfastFoods = foods.filter(f => breakfastIds.includes(f.id));
+        const otherFoods = foods.filter(f => !breakfastIds.includes(f.id));
+        foods = [...breakfastFoods, ...otherFoods];
+      }
+
       const selectId = `select-${mealIndex}-${si}`;
       html += `<select class="food-select" id="${selectId}" data-meal="${mealIndex}" data-slot="${si}">`;
       html += '<option value="">Choisis un aliment…</option>';
-      foods.forEach((food, fi) => {
-        html += `<option value="${food.id}">${food.name}</option>`;
-      });
+
+      if (isBreakfast && slot.dbCategory === 'protein') {
+        const breakfastIds = ['skyr', 'fromage_blanc', 'yaourt_grec', 'cottage', 'oeuf', 'blanc_oeuf', 'whey'];
+        const breakfastFoods = foods.filter(f => breakfastIds.includes(f.id));
+        const otherFoods = foods.filter(f => !breakfastIds.includes(f.id));
+        html += '<optgroup label="Idéal petit-déjeuner">';
+        breakfastFoods.forEach(food => { html += `<option value="${food.id}">${food.name}</option>`; });
+        html += '</optgroup><optgroup label="Autres protéines">';
+        otherFoods.forEach(food => { html += `<option value="${food.id}">${food.name}</option>`; });
+        html += '</optgroup>';
+      } else {
+        foods.forEach(food => { html += `<option value="${food.id}">${food.name}</option>`; });
+      }
+
       html += '</select>';
       html += `<div class="result-box" id="result-${mealIndex}-${si}" style="display:none"></div>`;
     }
