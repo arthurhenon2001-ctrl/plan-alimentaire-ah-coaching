@@ -947,7 +947,7 @@ function addSecondSource(mealIndex, slotIndex) {
 }
 
 /**
- * Callback quand le ratio slider change
+ * Callback quand le ratio slider change — mise à jour IN-PLACE sans re-render
  */
 function onRatioChange(slider) {
   const mi = parseInt(slider.dataset.meal);
@@ -957,34 +957,33 @@ function onRatioChange(slider) {
 
   MealPlanner.updateSplitRatio(meal, si, pct);
 
-  // Update label
+  // Update ratio label
   const label = document.getElementById(`ratio-val-${mi}-${si}`);
   if (label) label.textContent = `${pct}% / ${100 - pct}%`;
 
-  // Update badges
   const slot = meal.slots[si];
   const sibling = meal.slots[slot.siblingIndex];
   const macroName = slot.macro === 'prot' ? 'protéines' : (slot.macro === 'gluc' ? 'glucides' : 'lipides');
 
-  // Update target badges in DOM
-  const badges = document.querySelectorAll(`[data-meal="${mi}"] .slot`);
-  // Simpler: just recalc quantities and re-render result boxes
+  // Update target badges in DOM (sans re-render)
+  const allBadges = document.querySelectorAll('.slot-target-badge');
+  // Find the badges for these specific slots by their select elements
+  const badge1 = document.querySelector(`#select-${mi}-${si}`)?.closest('.slot')?.querySelector('.slot-target-badge');
+  const badge2 = sibling ? document.querySelector(`#select-${mi}-${slot.siblingIndex}`)?.closest('.slot')?.querySelector('.slot-target-badge') : null;
+
+  if (badge1) badge1.textContent = `${slot.target}g de ${macroName}`;
+  if (badge2) badge2.textContent = `${sibling.target}g de ${macroName}`;
+
+  // Recalculate quantities if foods are selected
   if (slot.selectedFood) {
     slot.quantity = MealPlanner.calculateQuantity(slot.selectedFood, slot.macro, slot.target);
-    updateMealSlotDisplays(mi);
   }
   if (sibling && sibling.selectedFood) {
     sibling.quantity = MealPlanner.calculateQuantity(sibling.selectedFood, sibling.macro, sibling.target);
-    updateMealSlotDisplays(mi);
   }
 
-  // Re-render for clean state
-  const constraints = { allergies: state.allergies, diet: state.diet, excludedIds: state.excludedFoods };
-  if (state.planDays === 7) {
-    renderWeekPlan(constraints);
-  } else {
-    renderPlan(state.meals, constraints);
-  }
+  // Update result boxes in place
+  updateMealSlotDisplays(mi);
   updateRecapBar(state.meals);
   Storage.save(state);
 }

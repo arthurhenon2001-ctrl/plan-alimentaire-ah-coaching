@@ -970,23 +970,23 @@ body {
 .add-source-btn {
   display: block;
   width: 100%;
-  margin-top: 8px;
-  padding: 8px;
-  border: 1.5px dashed var(--beige-dark);
-  border-radius: 8px;
-  background: transparent;
+  margin-top: 10px;
+  padding: 10px;
+  border: 2px dashed var(--green);
+  border-radius: 10px;
+  background: var(--green-light);
   font-family: 'DM Sans', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--gray);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green);
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .add-source-btn:hover {
-  border-color: var(--brown);
-  color: var(--brown);
-  background: var(--beige);
+  border-color: var(--green-dark);
+  color: var(--white);
+  background: var(--green);
 }
 
 .ratio-slider-wrap {
@@ -1019,22 +1019,39 @@ body {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 6px;
-  border-radius: 3px;
-  background: linear-gradient(to right, var(--gold) 0%, var(--gold) var(--pct, 50%), var(--green) var(--pct, 50%), var(--green) 100%);
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(to right, var(--gold) 0%, var(--gold) 50%, var(--green) 50%, var(--green) 100%);
   outline: none;
+  cursor: pointer;
+  touch-action: none; /* Empêche le scroll pendant le drag sur mobile */
 }
 
 .ratio-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--brown);
-  cursor: pointer;
-  border: 2px solid var(--white);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  cursor: grab;
+  border: 3px solid var(--white);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+
+.ratio-slider::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.1);
+}
+
+.ratio-slider::-moz-range-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--brown);
+  cursor: grab;
+  border: 3px solid var(--white);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
 }
 
 .regen-meal-btn {
