@@ -182,13 +182,20 @@ const DIET_FILTERS = {
 
 /**
  * Filtre les aliments d'une catégorie selon les contraintes
- * @param {string} category - 'protein', 'carb', 'fat', 'fruit', 'vegetable'
+ * @param {string} category - 'protein', 'carb', 'fat', 'fruit', 'vegetable', 'gluc' (carb+fruit)
  * @param {Object} constraints - { allergies: [], diet: '', excludedIds: [] }
  * @returns {Array} aliments filtrés
  */
 function filterFoods(category, constraints = {}) {
   const { allergies = [], diet = 'mixed', excludedIds = [] } = constraints;
-  let foods = [...NUTRITION_DB[category]];
+
+  // 'gluc' = merge féculents + fruits
+  let foods;
+  if (category === 'gluc') {
+    foods = [...NUTRITION_DB.carb, ...NUTRITION_DB.fruit];
+  } else {
+    foods = [...NUTRITION_DB[category]];
+  }
 
   // Exclure par ID (aliments que la personne n'aime pas)
   if (excludedIds.length > 0) {

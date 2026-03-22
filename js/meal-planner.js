@@ -5,38 +5,48 @@
 const MealPlanner = {
 
   // Répartition des macros par repas selon le nombre de repas
+  // Chaque repas a : protein, gluc, fat (+ vegetable optionnel)
   DISTRIBUTIONS: {
     2: [
-      { id: 'lunch',  name: 'Déjeuner', icon: '🍽', time: '12h — 13h', pct: 0.50, slots: ['protein', 'carb', 'vegetable', 'fat'] },
-      { id: 'dinner', name: 'Dîner',    icon: '🌙', time: '19h — 20h30', pct: 0.50, slots: ['protein', 'carb', 'vegetable', 'fat'] },
+      { id: 'lunch',  name: 'Déjeuner', icon: '🍽', time: '12h — 13h', pct: 0.50, slots: ['protein', 'gluc', 'vegetable', 'fat'] },
+      { id: 'dinner', name: 'Dîner',    icon: '🌙', time: '19h — 20h30', pct: 0.50, slots: ['protein', 'gluc', 'vegetable', 'fat'] },
     ],
     3: [
-      { id: 'breakfast', name: 'Petit-déjeuner', icon: '☀️', time: '7h — 9h',     pct: 0.25, slots: ['protein', 'carb', 'fruit', 'fat'] },
-      { id: 'lunch',     name: 'Déjeuner',       icon: '🍽', time: '12h — 13h',   pct: 0.40, slots: ['protein', 'carb', 'vegetable', 'fat'] },
-      { id: 'dinner',    name: 'Dîner',           icon: '🌙', time: '19h — 20h30', pct: 0.35, slots: ['protein', 'carb', 'vegetable', 'fat'] },
+      { id: 'breakfast', name: 'Petit-déjeuner', icon: '☀️', time: '7h — 9h',     pct: 0.25, slots: ['protein', 'gluc', 'fat'] },
+      { id: 'lunch',     name: 'Déjeuner',       icon: '🍽', time: '12h — 13h',   pct: 0.40, slots: ['protein', 'gluc', 'vegetable', 'fat'] },
+      { id: 'dinner',    name: 'Dîner',           icon: '🌙', time: '19h — 20h30', pct: 0.35, slots: ['protein', 'gluc', 'vegetable', 'fat'] },
     ],
     4: [
-      { id: 'breakfast', name: 'Petit-déjeuner', icon: '☀️', time: '7h — 9h',     pct: 0.25, slots: ['protein', 'carb', 'fruit', 'fat'] },
-      { id: 'lunch',     name: 'Déjeuner',       icon: '🍽', time: '12h — 13h',   pct: 0.35, slots: ['protein', 'carb', 'vegetable', 'fat'] },
-      { id: 'snack',     name: 'Collation',       icon: '🍎', time: '16h — 17h',   pct: 0.10, slots: ['protein', 'fruit'] },
-      { id: 'dinner',    name: 'Dîner',           icon: '🌙', time: '19h — 20h30', pct: 0.30, slots: ['protein', 'carb', 'vegetable', 'fat'] },
+      { id: 'breakfast', name: 'Petit-déjeuner', icon: '☀️', time: '7h — 9h',     pct: 0.25, slots: ['protein', 'gluc', 'fat'] },
+      { id: 'lunch',     name: 'Déjeuner',       icon: '🍽', time: '12h — 13h',   pct: 0.35, slots: ['protein', 'gluc', 'vegetable', 'fat'] },
+      { id: 'snack',     name: 'Collation',       icon: '🍎', time: '16h — 17h',   pct: 0.10, slots: ['protein', 'gluc'] },
+      { id: 'dinner',    name: 'Dîner',           icon: '🌙', time: '19h — 20h30', pct: 0.30, slots: ['protein', 'gluc', 'vegetable', 'fat'] },
     ],
     5: [
-      { id: 'breakfast',  name: 'Petit-déjeuner',  icon: '☀️', time: '7h — 9h',     pct: 0.20, slots: ['protein', 'carb', 'fruit', 'fat'] },
-      { id: 'snack_am',   name: 'Collation matin', icon: '🥤', time: '10h — 10h30', pct: 0.10, slots: ['protein', 'fruit'] },
-      { id: 'lunch',      name: 'Déjeuner',        icon: '🍽', time: '12h — 13h',   pct: 0.30, slots: ['protein', 'carb', 'vegetable', 'fat'] },
-      { id: 'snack_pm',   name: 'Collation après-midi', icon: '🍎', time: '16h — 17h', pct: 0.10, slots: ['protein', 'fruit'] },
-      { id: 'dinner',     name: 'Dîner',            icon: '🌙', time: '19h — 20h30', pct: 0.30, slots: ['protein', 'carb', 'vegetable', 'fat'] },
+      { id: 'breakfast',  name: 'Petit-déjeuner',  icon: '☀️', time: '7h — 9h',     pct: 0.20, slots: ['protein', 'gluc', 'fat'] },
+      { id: 'snack_am',   name: 'Collation matin', icon: '🥤', time: '10h — 10h30', pct: 0.10, slots: ['protein', 'gluc'] },
+      { id: 'lunch',      name: 'Déjeuner',        icon: '🍽', time: '12h — 13h',   pct: 0.30, slots: ['protein', 'gluc', 'vegetable', 'fat'] },
+      { id: 'snack_pm',   name: 'Collation après-midi', icon: '🍎', time: '16h — 17h', pct: 0.10, slots: ['protein', 'gluc'] },
+      { id: 'dinner',     name: 'Dîner',            icon: '🌙', time: '19h — 20h30', pct: 0.30, slots: ['protein', 'gluc', 'vegetable', 'fat'] },
     ],
   },
 
   // Quel macro est ciblé par chaque type de slot
   SLOT_CONFIG: {
     protein:   { label: 'Protéine',        macro: 'prot', color: 'var(--red)',          dbCategory: 'protein' },
-    carb:      { label: 'Féculent',        macro: 'gluc', color: 'var(--gold)',         dbCategory: 'carb' },
+    gluc:      { label: 'Glucides',        macro: 'gluc', color: 'var(--gold)',         dbCategory: 'gluc' },
     fat:       { label: 'Matière grasse',  macro: 'lip',  color: 'var(--brown-light)',  dbCategory: 'fat' },
-    fruit:     { label: 'Fruit',           macro: 'gluc', color: 'var(--green)',        dbCategory: 'fruit' },
     vegetable: { label: 'Légumes',         macro: null,   color: 'var(--green-dark)',   dbCategory: 'vegetable', isVeg: true },
+  },
+
+  /**
+   * Retourne les aliments pour un slot glucides (féculents + fruits mélangés)
+   */
+  getGlucFoods(constraints) {
+    const carbs = filterFoods('carb', constraints);
+    const fruits = filterFoods('fruit', constraints);
+    // Féculents d'abord, puis fruits séparés par un marqueur
+    return { carbs, fruits, all: [...carbs, ...fruits] };
   },
 
   /**
@@ -56,18 +66,11 @@ const MealPlanner = {
         let target = 0;
 
         if (config.isVeg) {
-          target = 0; // légumes à volonté
+          target = 0;
         } else if (config.macro === 'prot') {
           target = mealProt;
         } else if (config.macro === 'gluc') {
-          // Si le repas a fruit ET carb, on split les glucides
-          const hasCarb = meal.slots.includes('carb');
-          const hasFruit = meal.slots.includes('fruit');
-          if (hasCarb && hasFruit) {
-            target = slotType === 'carb' ? Math.round(mealGluc * 0.65) : Math.round(mealGluc * 0.35);
-          } else {
-            target = mealGluc;
-          }
+          target = mealGluc;
         } else if (config.macro === 'lip') {
           target = mealLip;
         }
@@ -83,6 +86,9 @@ const MealPlanner = {
           selectedFoodIndex: null,
           selectedFood: null,
           quantity: 0,
+          // Multi-source : ce slot peut avoir un sibling (2e source)
+          siblingIndex: null, // index du slot frère dans le même repas
+          splitPct: 100,     // pourcentage du target pour ce slot (100 = seul, 50 = partagé)
         };
       });
 
@@ -93,6 +99,64 @@ const MealPlanner = {
         slots,
       };
     });
+  },
+
+  /**
+   * Ajoute un 2e slot du même macro dans un repas
+   * Retourne l'index du nouveau slot
+   */
+  addSecondSource(meal, slotIndex) {
+    const originalSlot = meal.slots[slotIndex];
+    if (!originalSlot || originalSlot.isVeg) return -1;
+
+    const config = this.SLOT_CONFIG[originalSlot.type];
+    const newSlot = {
+      type: originalSlot.type,
+      label: config.label + ' (2)',
+      macro: originalSlot.macro,
+      color: config.color,
+      dbCategory: config.dbCategory,
+      target: Math.round(originalSlot.target * 0.5), // 50% du target original
+      isVeg: false,
+      selectedFoodIndex: null,
+      selectedFood: null,
+      quantity: 0,
+      siblingIndex: slotIndex,
+      splitPct: 50,
+    };
+
+    // Mettre à jour le slot original : 50% du target
+    originalSlot.splitPct = 50;
+    originalSlot.target = Math.round((originalSlot.target / (originalSlot.splitPct / 100 || 1)) * 0.5);
+    originalSlot.siblingIndex = meal.slots.length;
+
+    // Recalculer les targets après split
+    const totalMacro = originalSlot.macro === 'prot' ? meal.macroDisplay.prot :
+                       originalSlot.macro === 'gluc' ? meal.macroDisplay.gluc : meal.macroDisplay.lip;
+    originalSlot.target = Math.round(totalMacro * 0.5);
+    newSlot.target = Math.round(totalMacro * 0.5);
+
+    meal.slots.push(newSlot);
+    return meal.slots.length - 1;
+  },
+
+  /**
+   * Met à jour le ratio entre 2 slots frères
+   */
+  updateSplitRatio(meal, slotIndex, pct) {
+    const slot = meal.slots[slotIndex];
+    if (!slot || slot.siblingIndex === null) return;
+
+    const sibling = meal.slots[slot.siblingIndex];
+    if (!sibling) return;
+
+    const totalMacro = slot.macro === 'prot' ? meal.macroDisplay.prot :
+                       slot.macro === 'gluc' ? meal.macroDisplay.gluc : meal.macroDisplay.lip;
+
+    slot.splitPct = pct;
+    slot.target = Math.round(totalMacro * (pct / 100));
+    sibling.splitPct = 100 - pct;
+    sibling.target = Math.round(totalMacro * ((100 - pct) / 100));
   },
 
   /**

@@ -851,36 +851,14 @@ function buildMealCardHTML(meal, mealIndex, constraints, dayIndex) {
       }
     } else {
       // Mode équivalences : dropdown
-      let foods = filterFoods(slot.dbCategory, constraints);
-
-      // Pour le petit-déjeuner, trier les protéines : laitier/œufs/whey en premier
-      const isBreakfast = meal.id === 'breakfast';
-      if (isBreakfast && slot.dbCategory === 'protein') {
-        const breakfastIds = ['skyr', 'fromage_blanc', 'yaourt_grec', 'cottage', 'oeuf', 'blanc_oeuf', 'whey'];
-        const breakfastFoods = foods.filter(f => breakfastIds.includes(f.id));
-        const otherFoods = foods.filter(f => !breakfastIds.includes(f.id));
-        foods = [...breakfastFoods, ...otherFoods];
-      }
-
       const selectId = `select-${mealIndex}-${si}`;
-      html += `<select class="food-select" id="${selectId}" data-meal="${mealIndex}" data-slot="${si}">`;
-      html += '<option value="">Choisis un aliment…</option>';
-
-      if (isBreakfast && slot.dbCategory === 'protein') {
-        const breakfastIds = ['skyr', 'fromage_blanc', 'yaourt_grec', 'cottage', 'oeuf', 'blanc_oeuf', 'whey'];
-        const breakfastFoods = foods.filter(f => breakfastIds.includes(f.id));
-        const otherFoods = foods.filter(f => !breakfastIds.includes(f.id));
-        html += '<optgroup label="Idéal petit-déjeuner">';
-        breakfastFoods.forEach(food => { html += `<option value="${food.id}">${food.name}</option>`; });
-        html += '</optgroup><optgroup label="Autres protéines">';
-        otherFoods.forEach(food => { html += `<option value="${food.id}">${food.name}</option>`; });
-        html += '</optgroup>';
-      } else {
-        foods.forEach(food => { html += `<option value="${food.id}">${food.name}</option>`; });
-      }
-
-      html += '</select>';
+      html += buildFoodDropdown(slot, selectId, mealIndex, si, meal, constraints);
       html += `<div class="result-box" id="result-${mealIndex}-${si}" style="display:none"></div>`;
+
+      // Bouton "+" pour ajouter une 2e source (seulement si pas déjà un sibling)
+      if (!slot.siblingIndex && slot.siblingIndex !== 0) {
+        html += `<button class="add-source-btn" onclick="addSecondSource(${mealIndex}, ${si})">+ Ajouter une 2e source</button>`;
+      }
     }
 
     html += '</div>';
@@ -897,6 +875,61 @@ function buildMealCardHTML(meal, mealIndex, constraints, dayIndex) {
 /**
  * Génère le HTML du result-box avec macros détaillées
  */
+/**
+ * Construit le dropdown pour un slot (avec optgroups pour glucides et protéines)
+ */
+function buildFoodDropdown(slot, selectId, mealIndex, si, meal, constraints) {
+  let html = `<select class="food-select" id="${selectId}" data-meal="${mealIndex}" data-slot="${si}">`;
+  html += '<option value="">Choisis un aliment…</option>';
+
+  if (slot.dbCategory === 'gluc') {
+    // Glucides : séparer féculents et fruits en optgroups
+    const carbs = filterFoods('carb', constraints);
+    const fruits = filterFoods('fruit', constraints);
+    html += '<optgroup label="Féculents & céréales">';
+    carbs.forEach(f => { html += `<option value="${f.id}">${f.name}</option>`; });
+    html += '</optgroup><optgroup label="Fruits">';
+    fruits.forEach(f => { html += `<option value="${f.id}">${f.name}</option>`; });
+    html += '</optgroup>';
+  } else if (slot.dbCategory === 'protein') {
+    // Protéines : laitier/œufs en premier pour tous les repas
+    const dairyIds = ['skyr', 'fromage_blanc', 'yaourt_grec', 'cottage', 'oeuf', 'blanc_oeuf', 'whey'];
+    const foods = filterFoods('protein', constraints);
+    const dairy = foods.filter(f => dairyIds.includes(f.id));
+    const others = foods.filter(f => !dairyIds.includes(f.id));
+    html += '<optgroup label="Laitiers / Œufs / Whey">';
+    dairy.forEach(f => { html += `<option value="${f.id}">${f.name}</option>`; });
+    html += '</optgroup><optgroup label="Viandes & Poissons">';
+    others.forEach(f => { html += `<option value="${f.id}">${f.name}</option>`; });
+    html += '</optgroup>';
+  } else {
+    const foods = filterFoods(slot.dbCategory, constraints);
+    foods.forEach(f => { html += `<option value="${f.id}">${f.name}</option>`; });
+  }
+
+  html += '</select>';
+  return html;
+}
+
+/**
+ * Ajoute une 2e source de macro dans un repas
+ */
+function addSecondSource(mealIndex, slotIndex) {
+  const meal = state.meals[mealIndex];
+  const newIdx = MealPlanner.addSecondSource(meal, slotIndex);
+  if (newIdx < 0) return;
+
+  // Re-render le plan complet
+  const constraints = { allergies: state.allergies, diet: state.diet, excludedIds: state.excludedFoods };
+  if (state.planDays === 7) {
+    renderWeekPlan(constraints);
+  } else {
+    renderPlan(state.meals, constraints);
+  }
+  updateRecapBar(state.meals);
+  Storage.save(state);
+}
+
 function buildResultBoxHTML(slot, mealIndex, slotIndex, showSwap) {
   const food = slot.selectedFood;
   const quantity = slot.quantity;

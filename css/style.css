@@ -967,6 +967,28 @@ body {
 
 .swap-btn:hover { background: var(--green); color: var(--white); }
 
+.add-source-btn {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px;
+  border: 1.5px dashed var(--beige-dark);
+  border-radius: 8px;
+  background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--gray);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.add-source-btn:hover {
+  border-color: var(--brown);
+  color: var(--brown);
+  background: var(--beige);
+}
+
 .regen-meal-btn {
   width: 100%;
   margin-top: 16px;
