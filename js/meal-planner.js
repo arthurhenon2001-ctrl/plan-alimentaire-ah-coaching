@@ -194,7 +194,10 @@ const MealPlanner = {
 
   /**
    * Résout les quantités de chaque slot pour que les macros totaux du repas
-   * correspondent aux cibles, avec des quantités minimum respectées.
+   * correspondent aux cibles. Utilise une approche par priorité :
+   * 1. D'abord le slot protéine (prioritaire)
+   * 2. Puis compenser les macros secondaires (lip/gluc apportées par la protéine)
+   * 3. Enfin ajuster les slots restants
    */
   _solveQuantities(activeSlots, meal) {
     if (activeSlots.length === 0) return;
@@ -205,16 +208,47 @@ const MealPlanner = {
       lip: meal.macroDisplay.lip,
     };
 
-    // Étape 1 : quantité initiale naïve (sans compensation)
-    activeSlots.forEach(slot => {
-      slot.quantity = this.calculateQuantity(slot.selectedFood, slot.macro, slot.target);
-      const minQ = this.MIN_QUANTITIES[slot.type] || 10;
-      slot.quantity = Math.max(minQ, slot.quantity);
+    // Trier : protéine d'abord, puis glucides, puis lipides
+    const sortOrder = { prot: 0, gluc: 1, lip: 2 };
+    const sorted = [...activeSlots].sort((a, b) => (sortOrder[a.macro] || 3) - (sortOrder[b.macro] || 3));
+
+    // Remaining budget pour chaque macro
+    const remaining = { ...targets };
+
+    // Étape 1 : Calculer séquentiellement, en soustrayant les contributions croisées
+    sorted.forEach(slot => {
+      const food = slot.selectedFood;
+      const macro = slot.macro;
+
+      // Combien de ce macro reste à combler ?
+      const macroNeeded = Math.max(0, remaining[macro]);
+
+      // Calcul de la quantité pour atteindre le macro needed
+      const macroPer100 = macro === 'prot' ? food.prot : macro === 'gluc' ? food.gluc : food.lip;
+      if (macroPer100 <= 0) {
+        slot.quantity = this.MIN_QUANTITIES[slot.type] || 10;
+      } else {
+        slot.quantity = (macroNeeded / macroPer100) * 100;
+      }
+
+      // Si le budget de ce macro est déjà dépassé, quantité = 0
+      // Sinon appliquer le minimum adapté
+      if (macroNeeded <= 0) {
+        slot.quantity = 0;
+      } else {
+        const minQ = macro === 'lip' ? 5 : (this.MIN_QUANTITIES[slot.type] || 10);
+        slot.quantity = Math.max(minQ, slot.quantity);
+      }
+
+      // Soustraire TOUTES les macros apportées par cet aliment du budget restant
+      const actual = this.computeActualMacros(food, slot.quantity);
+      remaining.prot -= actual.prot;
+      remaining.gluc -= actual.gluc;
+      remaining.lip -= actual.lip;
     });
 
-    // Étape 2 : itérer pour converger (max 8 passes)
-    for (let pass = 0; pass < 8; pass++) {
-      // Calculer les totaux actuels par macro
+    // Étape 2 : Si un macro est en excès (remaining < 0), réduire les slots secondaires
+    for (let pass = 0; pass < 5; pass++) {
       const totals = { prot: 0, gluc: 0, lip: 0 };
       activeSlots.forEach(slot => {
         const actual = this.computeActualMacros(slot.selectedFood, slot.quantity);
@@ -223,49 +257,40 @@ const MealPlanner = {
         totals.lip += actual.lip;
       });
 
-      // Pour chaque macro, ajuster le slot principal proportionnellement
-      ['prot', 'gluc', 'lip'].forEach(macro => {
-        const target = targets[macro];
-        const current = totals[macro];
-        if (target <= 0 || current <= 0) return;
+      let converged = true;
+      ['lip', 'gluc', 'prot'].forEach(macro => {
+        const excess = totals[macro] - targets[macro];
+        if (excess <= 2) return; // Tolérance de 2g
 
-        // Trouver les slots qui ciblent ce macro
+        converged = false;
+        // Trouver le slot principal pour ce macro et réduire
         const primarySlots = activeSlots.filter(s => s.macro === macro);
-        if (primarySlots.length === 0) return;
-
-        const excess = current - target;
-        if (Math.abs(excess) < 1) return; // Déjà OK
-
-        // Calculer combien le(s) slot(s) principal(aux) contribue(nt) à ce macro
         primarySlots.forEach(slot => {
-          const actual = this.computeActualMacros(slot.selectedFood, slot.quantity);
-          const slotMacro = actual[macro];
-
-          // Contribution des AUTRES slots à ce macro
-          const otherContrib = current - slotMacro;
-
-          // Nouveau target pour ce slot = target total - ce que les autres apportent
-          const newSlotTarget = Math.max(0, target - otherContrib);
-
-          // Calculer la quantité nécessaire
           const macroPer100 = macro === 'prot' ? slot.selectedFood.prot :
                               macro === 'gluc' ? slot.selectedFood.gluc : slot.selectedFood.lip;
+          if (macroPer100 <= 0) return;
 
-          if (macroPer100 > 0) {
-            const newQty = (newSlotTarget / macroPer100) * 100;
-            const minQ = this.MIN_QUANTITIES[slot.type] || 10;
-            slot.quantity = Math.max(minQ, Math.round(newQty));
-          }
+          const reductionG = (excess / primarySlots.length);
+          const reductionQty = (reductionG / macroPer100) * 100;
+          slot.quantity = Math.max(0, slot.quantity - reductionQty);
         });
+
+        // Si pas de slot principal (ex: excès de lip venant des protéines), réduire le slot lip à son min
+        if (primarySlots.length === 0) {
+          const lipSlots = activeSlots.filter(s => s.macro === 'lip');
+          lipSlots.forEach(s => {
+            s.quantity = 5; // minimum absolu
+          });
+        }
       });
+
+      if (converged) break;
     }
 
-    // Étape 3 : arrondir proprement et vérifier les minimums
+    // Étape 3 : arrondir et gérer les unités
     activeSlots.forEach(slot => {
-      const minQ = this.MIN_QUANTITIES[slot.type] || 10;
-      slot.quantity = Math.max(minQ, Math.round(slot.quantity));
+      slot.quantity = Math.max(0, Math.round(slot.quantity));
 
-      // Pour les aliments avec unités (œufs, doses, tranches), ajuster au multiple
       if (slot.selectedFood.unitWeight) {
         const units = Math.max(1, Math.round(slot.quantity / slot.selectedFood.unitWeight));
         slot.quantity = units * slot.selectedFood.unitWeight;

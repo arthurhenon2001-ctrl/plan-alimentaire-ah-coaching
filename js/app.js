@@ -879,6 +879,16 @@ function buildMealCardHTML(meal, mealIndex, constraints, dayIndex) {
 function buildResultBoxHTML(slot, mealIndex, slotIndex, showSwap) {
   const food = slot.selectedFood;
   const quantity = slot.quantity;
+
+  // Si quantité = 0, les macros sont déjà couvertes par les autres aliments
+  if (quantity <= 0) {
+    return `<div class="result-box result-box-skipped">
+      <div class="result-label">Pas nécessaire</div>
+      <div class="result-food-name" style="font-size:12px;color:var(--gray)">Déjà couvert par les autres aliments du repas</div>
+      ${showSwap ? `<button class="swap-btn" onclick="swapFood(${mealIndex}, ${slotIndex})">↻ Changer</button>` : ''}
+    </div>`;
+  }
+
   const displayQty = MealPlanner.formatQuantity(food, quantity);
   const foodName = food.name.toLowerCase();
   const vowels = 'aeiouyàâéèêëïîôùûüœæ';
