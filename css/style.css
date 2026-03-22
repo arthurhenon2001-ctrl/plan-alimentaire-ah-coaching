@@ -1172,12 +1172,67 @@ body {
   border: 1px solid var(--beige-dark);
 }
 
+.summary-meal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .summary-meal h4 {
   font-size: 16px;
   font-weight: 600;
   color: var(--brown-dark);
-  margin-bottom: 10px;
+  margin: 0;
 }
+
+.summary-meal-macros {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.summary-meal-macros span {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 5px;
+}
+
+.smm-kcal { background: var(--beige); color: var(--brown-dark); }
+.smm-p { background: var(--red-light); color: var(--red); }
+.smm-g { background: #FFF8EE; color: #B8892A; }
+.smm-l { background: #F5EDE6; color: var(--brown); }
+
+.summary-day-total {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--brown);
+  color: var(--white);
+  border-radius: 10px;
+  margin: 12px 0 4px;
+  flex-wrap: wrap;
+}
+
+.sdt-label { font-weight: 700; font-size: 13px; }
+.sdt-kcal { font-weight: 700; font-size: 15px; }
+.sdt-macro { font-size: 11px; opacity: 0.85; }
+
+.summary-week-avg {
+  background: var(--brown-dark);
+  color: var(--white);
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.summary-week-avg h3 { color: var(--white); }
+.summary-week-avg .summary-row span { color: rgba(255,255,255,0.7); }
+.summary-week-avg .summary-row strong { color: var(--white); }
+.summary-week-avg .summary-row.accent strong { color: var(--gold); font-size: 18px; }
 
 .summary-food {
   display: flex;

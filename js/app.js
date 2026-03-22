@@ -1365,35 +1365,88 @@ function renderSummary() {
     <div class="summary-row"><span>Nombre de repas</span><strong>${state.mealCount} repas/jour</strong></div>
   </div>`;
 
-  // Meal details
+  // Meal details avec macros par repas + total jour
+  function computeMealMacros(meal) {
+    let kcal = 0, prot = 0, gluc = 0, lip = 0;
+    meal.slots.forEach(slot => {
+      if (slot.selectedFood && slot.quantity > 0) {
+        const a = MealPlanner.computeActualMacros(slot.selectedFood, slot.quantity);
+        kcal += a.kcal; prot += a.prot; gluc += a.gluc; lip += a.lip;
+      }
+    });
+    return { kcal: Math.round(kcal), prot: Math.round(prot), gluc: Math.round(gluc), lip: Math.round(lip) };
+  }
+
   function renderMealsSummary(meals, dayLabel) {
     let mhtml = '';
     if (dayLabel) {
       mhtml += `<div class="summary-section"><h3>${dayLabel}</h3>`;
     }
+
+    let dayK = 0, dayP = 0, dayG = 0, dayL = 0;
+
     meals.forEach(meal => {
+      const mm = computeMealMacros(meal);
+      dayK += mm.kcal; dayP += mm.prot; dayG += mm.gluc; dayL += mm.lip;
+
       mhtml += `<div class="summary-meal">
-        <h4>${meal.icon} ${meal.name}</h4>`;
+        <div class="summary-meal-header">
+          <h4>${meal.icon} ${meal.name}</h4>
+          <div class="summary-meal-macros">
+            <span class="smm-kcal">${mm.kcal} kcal</span>
+            <span class="smm-p">P ${mm.prot}g</span>
+            <span class="smm-g">G ${mm.gluc}g</span>
+            <span class="smm-l">L ${mm.lip}g</span>
+          </div>
+        </div>`;
       meal.slots.forEach(slot => {
         if (slot.isVeg) {
           mhtml += `<div class="summary-food"><span class="slot-dot-small" style="background:${slot.color}"></span> Légumes — 200g minimum</div>`;
-        } else if (slot.selectedFood) {
+        } else if (slot.selectedFood && slot.quantity > 0) {
           const qty = MealPlanner.formatQuantity(slot.selectedFood, slot.quantity);
           mhtml += `<div class="summary-food"><span class="slot-dot-small" style="background:${slot.color}"></span> ${qty} ${slot.selectedFood.name}</div>`;
         }
       });
       mhtml += '</div>';
     });
+
+    // Total du jour
+    mhtml += `<div class="summary-day-total">
+      <span class="sdt-label">${dayLabel ? 'Total ' + dayLabel : 'Total du jour'}</span>
+      <span class="sdt-kcal">${dayK} kcal</span>
+      <span class="sdt-macro">P ${dayP}g · G ${dayG}g · L ${dayL}g</span>
+    </div>`;
+
     if (dayLabel) mhtml += '</div>';
-    return mhtml;
+    return { html: mhtml, kcal: dayK, prot: dayP, gluc: dayG, lip: dayL };
   }
+
+  let weekTotals = { kcal: 0, prot: 0, gluc: 0, lip: 0, days: 0 };
 
   if (state.planDays === 7 && state.weekMeals) {
     for (let d = 0; d < 7; d++) {
-      html += renderMealsSummary(state.weekMeals[d], DAY_NAMES[d]);
+      const day = renderMealsSummary(state.weekMeals[d], DAY_NAMES[d]);
+      html += day.html;
+      weekTotals.kcal += day.kcal;
+      weekTotals.prot += day.prot;
+      weekTotals.gluc += day.gluc;
+      weekTotals.lip += day.lip;
+      weekTotals.days++;
     }
+
+    // Moyenne hebdomadaire
+    html += `<div class="summary-section summary-week-avg">
+      <h3>Moyenne hebdomadaire</h3>
+      <div class="summary-row accent"><span>Calories / jour</span><strong>${Math.round(weekTotals.kcal / 7)} kcal</strong></div>
+      <div class="summary-row"><span>Protéines / jour</span><strong>${Math.round(weekTotals.prot / 7)}g</strong></div>
+      <div class="summary-row"><span>Glucides / jour</span><strong>${Math.round(weekTotals.gluc / 7)}g</strong></div>
+      <div class="summary-row"><span>Lipides / jour</span><strong>${Math.round(weekTotals.lip / 7)}g</strong></div>
+      <div class="summary-row"><span>Cible</span><strong>${r.targetCals} kcal</strong></div>
+      <div class="summary-row"><span>Écart</span><strong>${((weekTotals.kcal / 7 - r.targetCals) / r.targetCals * 100).toFixed(1)}%</strong></div>
+    </div>`;
   } else {
-    html += renderMealsSummary(state.meals, null);
+    const day = renderMealsSummary(state.meals, null);
+    html += day.html;
   }
 
   summaryEl.innerHTML = html;
