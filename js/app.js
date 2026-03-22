@@ -836,7 +836,7 @@ function buildMealCardHTML(meal, mealIndex, constraints, dayIndex) {
         </div>
         <input type="range" class="ratio-slider" min="20" max="80" step="5" value="${pct}"
           data-meal="${mealIndex}" data-slot="${slot.siblingIndex}"
-          oninput="onRatioChange(this)">
+          oninput="onRatioSlide(this)" onchange="onRatioChange(this)">
       </div>`;
     }
 
@@ -947,7 +947,18 @@ function addSecondSource(mealIndex, slotIndex) {
 }
 
 /**
- * Callback quand le ratio slider change — mise à jour IN-PLACE sans re-render
+ * Callback PENDANT le drag du slider — ne met à jour que le label (léger)
+ */
+function onRatioSlide(slider) {
+  const mi = parseInt(slider.dataset.meal);
+  const si = parseInt(slider.dataset.slot);
+  const pct = parseInt(slider.value);
+  const label = document.getElementById(`ratio-val-${mi}-${si}`);
+  if (label) label.textContent = `${pct}% / ${100 - pct}%`;
+}
+
+/**
+ * Callback APRÈS le relâchement du slider — applique le changement
  */
 function onRatioChange(slider) {
   const mi = parseInt(slider.dataset.meal);
@@ -985,6 +996,17 @@ function onRatioChange(slider) {
   // Update result boxes in place
   updateMealSlotDisplays(mi);
   updateRecapBar(state.meals);
+
+  // Sécurité : restaurer les valeurs des selects (au cas où le browser les reset)
+  meal.slots.forEach((s, i) => {
+    if (s.selectedFood) {
+      const sel = document.getElementById(`select-${mi}-${i}`);
+      if (sel && sel.value !== s.selectedFood.id) {
+        sel.value = s.selectedFood.id;
+      }
+    }
+  });
+
   Storage.save(state);
 }
 
