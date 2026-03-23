@@ -194,9 +194,10 @@ const Calculator = {
       const dailyDeficit = (weeklyChange * 7700) / 7;
       let targetCals = Math.round(tdee - dailyDeficit);
 
-      // Plancher minimum viable : le plus haut entre (BMR + 200) et le minimum absolu
-      const absoluteMin = sex === 'female' ? 1200 : 1400;
-      const safeFloor = Math.max(absoluteMin, bmr + 200);
+      // Plancher minimum viable : le plus haut entre le minimum absolu et le BMR
+      // On ne descend JAMAIS sous le BMR (métabolisme de repos)
+      const absoluteMin = sex === 'female' ? 1200 : 1500;
+      const safeFloor = Math.max(absoluteMin, bmr);
 
       if (targetCals < safeFloor && goal === 'cut') {
         // Calculer ce qui est réellement possible avec ce plancher
@@ -236,7 +237,7 @@ const Calculator = {
     }
 
     let fallbackCals = Math.round(tdee * 0.80);
-    const fallbackFloor = Math.max(sex === 'female' ? 1200 : 1400, bmr + 200);
+    const fallbackFloor = Math.max(sex === 'female' ? 1200 : 1500, bmr);
     if (fallbackCals < fallbackFloor) {
       fallbackCals = fallbackFloor;
       warnings.push({
