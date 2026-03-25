@@ -152,7 +152,7 @@ const Calculator = {
    * Règle n°2 : Perte max adaptée au profil (sexe, poids)
    * Règle n°3 : Si trop bas → message prévention (augmenter activité)
    */
-  calculateTargetCalories(tdee, goal, sex, weight, targetWeight, weeks, bmr) {
+  calculateTargetCalories(tdee, goal, sex, weight, targetWeight, weeks, bmr, state) {
     if (goal === 'maintain') {
       return { targetCals: tdee, deficitPct: 0, warnings: [] };
     }
@@ -194,10 +194,14 @@ const Calculator = {
       const dailyDeficit = (weeklyChange * 7700) / 7;
       let targetCals = Math.round(tdee - dailyDeficit);
 
-      // Plancher minimum viable : le plus haut entre le minimum absolu et le BMR
-      // On ne descend JAMAIS sous le BMR (métabolisme de repos)
+      // Plancher minimum viable
+      // Pour les personnes en surpoids (BMI>30), le BMR est gonflé par la masse grasse
+      // → on peut descendre en dessous du BMR, mais jamais sous le minimum absolu
+      // Pour les autres : on ne descend pas sous le BMR
+      const heightM = (state?.height || 170) / 100;
+      const currentBmi = weight / (heightM * heightM);
       const absoluteMin = sex === 'female' ? 1200 : 1500;
-      const safeFloor = Math.max(absoluteMin, bmr);
+      const safeFloor = currentBmi > 30 ? absoluteMin : Math.max(absoluteMin, bmr);
 
       if (targetCals < safeFloor && goal === 'cut') {
         // Calculer ce qui est réellement possible avec ce plancher
@@ -214,9 +218,12 @@ const Calculator = {
         } else {
           targetCals = safeFloor;
           const suggestedWeeksFromFloor = Math.ceil((weight - targetWeight) / maxPossibleWeeklyLoss);
+          const belowBmrMsg = currentBmi > 30
+            ? `On t'a mis à ${safeFloor} kcal pour un déficit efficace et sûr. À ce rythme, tu peux perdre ~${maxPossibleWeeklyLoss.toFixed(2)} kg/semaine, soit ${suggestedWeeksFromFloor} semaines pour atteindre ton objectif. Pour aller plus vite, augmente ta dépense : ajoute 2 000 à 4 000 pas/jour ou une séance supplémentaire.`
+            : `Ton objectif initial nécessitait de manger en dessous de ton métabolisme de base (${bmr} kcal), ce qui est dangereux et contre-productif. On t'a mis à ${safeFloor} kcal (minimum viable). À ce rythme, tu peux perdre ~${maxPossibleWeeklyLoss.toFixed(2)} kg/semaine, soit ${suggestedWeeksFromFloor} semaines pour atteindre ton objectif. Pour aller plus vite, augmente ta dépense : ajoute 2 000 à 4 000 pas/jour ou une séance supplémentaire.`;
           warnings.push({
-            type: 'below_bmr',
-            message: `Ton objectif initial nécessitait de manger en dessous de ton métabolisme de base (${bmr} kcal), ce qui est dangereux et contre-productif. On t'a mis à ${safeFloor} kcal (minimum viable). À ce rythme, tu peux perdre ~${maxPossibleWeeklyLoss.toFixed(2)} kg/semaine, soit ${suggestedWeeksFromFloor} semaines pour atteindre ton objectif. Pour aller plus vite, augmente ta dépense : ajoute 2 000 à 4 000 pas/jour ou une séance supplémentaire.`,
+            type: currentBmi > 30 ? 'adjusted' : 'below_bmr',
+            message: belowBmrMsg,
           });
         }
       }
@@ -237,7 +244,9 @@ const Calculator = {
     }
 
     let fallbackCals = Math.round(tdee * 0.80);
-    const fallbackFloor = Math.max(sex === 'female' ? 1200 : 1500, bmr);
+    const fbBmi = weight / (((state?.height || 170) / 100) ** 2);
+    const fallbackAbsMin = sex === 'female' ? 1200 : 1500;
+    const fallbackFloor = fbBmi > 30 ? fallbackAbsMin : Math.max(fallbackAbsMin, bmr);
     if (fallbackCals < fallbackFloor) {
       fallbackCals = fallbackFloor;
       warnings.push({
@@ -297,7 +306,7 @@ const Calculator = {
     const stressAdj = this.calculateStressAdjustment(bmr, stress || 4);
 
     const tdee = Math.round(bmr + neat + eat + tef + sleepAdj + stressAdj);
-    const { targetCals, deficitPct, warnings } = this.calculateTargetCalories(tdee, goal, sex, weight, targetWeight, weeks, bmr);
+    const { targetCals, deficitPct, warnings } = this.calculateTargetCalories(tdee, goal, sex, weight, targetWeight, weeks, bmr, state);
     const macros = this.calculateMacros(targetCals, leanMass, bodyFat, weight, sex, goal);
 
     return {

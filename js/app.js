@@ -580,6 +580,7 @@ function checkGoalSafety() {
         const previewResult = Calculator.compute(state);
         const { bmr, tdee, targetCals, warnings } = previewResult;
 
+        const previewBmi = weight / ((height / 100) ** 2);
         if (warnings && warnings.length > 0) {
           warnings.forEach(w => {
             if (w.type === 'below_bmr' || w.type === 'impossible') {
@@ -588,11 +589,18 @@ function checkGoalSafety() {
                 title: 'Objectif non réalisable en sécurité',
                 text: w.message,
               });
+            } else if (w.type === 'adjusted') {
+              // Pour BMI > 30 : info, pas danger
+              alerts.push({
+                type: 'info',
+                title: 'Déficit ajusté',
+                text: w.message,
+              });
             } else if (w.type === 'too_aggressive') {
               // Déjà géré par le check pctPerWeek ci-dessus — éviter la redondance
             }
           });
-        } else if (targetCals < bmr + 200) {
+        } else if (targetCals < bmr + 200 && previewBmi <= 30) {
           alerts.push({
             type: 'warning',
             title: 'Calories serrées',
