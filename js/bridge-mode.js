@@ -67,15 +67,15 @@
   // CRITIQUE : on doit override AVANT que app.js declenche son
   // DOMContentLoaded qui appelle goToStep(state.currentStep) qui
   // peut appeler computeAndRenderPlan → Calculator.compute(state).
-  // Si on attendait notre propre DOMContentLoaded, l'override
-  // arriverait trop tard et le message "Remplis d'abord ton profil"
-  // s'afficherait dans #planContent avant qu'on puisse activer le
-  // mode bridge.
-  // bridge-mode.js etant charge APRES calculator.js dans index.html,
-  // window.Calculator est deja defini ici.
+  //
+  // IMPORTANT : Calculator est declare avec `const` dans calculator.js,
+  // donc il n'est PAS attache a window (uniquement `var` au top-level
+  // l'est). Mais il reste accessible globalement comme variable libre.
+  // On utilise donc `Calculator` directement (pas `window.Calculator`).
+  // Idem pour state/goToStep/prevStep dans la section 4.
   try {
-    if (typeof window.Calculator === 'object' && typeof window.Calculator.compute === 'function') {
-      window.Calculator.compute = function () {
+    if (typeof Calculator !== 'undefined' && typeof Calculator.compute === 'function') {
+      Calculator.compute = function () {
         return {
           targetCals: bridgeData.cal,
           macros: {
@@ -90,6 +90,8 @@
           _bridge: true,
         };
       };
+    } else {
+      console.warn('[bridge-mode] Calculator introuvable au top-level, override impossible');
     }
   } catch (e) {
     console.warn('[bridge-mode] Override Calculator.compute echoue', e);
@@ -120,42 +122,63 @@
   // Note : l'override de Calculator.compute est deja fait au top-level
   // (section 2). Ici on s'occupe juste de state, navigation, banner.
   function activateBridgeMode(data) {
-    // 4.1 — Setter le state.results directement (si state est accessible)
-    if (typeof window.state === 'object' && window.state) {
-      window.state.results = {
-        targetCals: data.cal,
-        macros: {
-          protein: data.prot,
-          carbs: data.gluc,
-          fat: data.lip,
-        },
-        tdee: data.cal,
-        bmr: Math.round(data.cal * 0.65),
-        deficit: 0,
-        warnings: [],
-        _bridge: true,
-      };
+    // 4.1 — Setter le state.results directement.
+    // state est `const` dans app.js → utilise variable globale, pas window.state
+    try {
+      if (typeof state !== 'undefined' && state) {
+        state.results = {
+          targetCals: data.cal,
+          macros: {
+            protein: data.prot,
+            carbs: data.gluc,
+            fat: data.lip,
+          },
+          tdee: data.cal,
+          bmr: Math.round(data.cal * 0.65),
+          deficit: 0,
+          warnings: [],
+          _bridge: true,
+        };
+        // Injecter aussi des valeurs profil dummy si vide, pour eviter qu'un
+        // autre code (validation cachee) plante. Ces valeurs ne sont JAMAIS
+        // utilisees pour le calcul (Calculator.compute est deja override),
+        // c'est juste pour satisfaire d'eventuelles verifs internes.
+        if (!state.age) state.age = 30;
+        if (!state.weight) state.weight = 70;
+        if (!state.height) state.height = 170;
+      }
+    } catch (e) {
+      console.warn('[bridge-mode] state setup failed', e);
     }
 
     // 4.2 — Injecter le bandeau coach
     injectBridgeBanner(data);
 
     // 4.3 — Forcer le saut a l'etape 3 (preferences alimentaires)
-    if (typeof window.goToStep === 'function') {
-      window.goToStep(3);
+    // Les function declarations (function goToStep()) sont attachees a
+    // window dans un script classique → window.goToStep est accessible.
+    try {
+      if (typeof window.goToStep === 'function') {
+        window.goToStep(3);
+      }
+    } catch (e) {
+      console.warn('[bridge-mode] goToStep(3) failed', e);
     }
 
     // 4.4 — Bloquer le bouton "Precedent" pour empecher de remonter
     // aux etapes calcul metabo. On wrappe prevStep, on ne le casse pas.
-    if (typeof window.prevStep === 'function') {
-      const originalPrev = window.prevStep;
-      window.prevStep = function () {
-        if (window.state && typeof window.state.currentStep === 'number' && window.state.currentStep <= 3) {
-          // Bloque : pas de retour avant l'etape 3
-          return;
-        }
-        try { originalPrev(); } catch (_) {}
-      };
+    try {
+      if (typeof window.prevStep === 'function') {
+        const originalPrev = window.prevStep;
+        window.prevStep = function () {
+          if (typeof state !== 'undefined' && state && typeof state.currentStep === 'number' && state.currentStep <= 3) {
+            return;
+          }
+          try { originalPrev(); } catch (_) {}
+        };
+      }
+    } catch (e) {
+      console.warn('[bridge-mode] prevStep override failed', e);
     }
   }
 
