@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ah-plan-v1';
+const CACHE_NAME = 'ah-plan-v3-bridge';
 const ASSETS = [
   './',
   'index.html',
@@ -8,6 +8,7 @@ const ASSETS = [
   'js/storage.js',
   'js/meal-planner.js',
   'js/app.js',
+  'js/bridge-mode.js',
 ];
 
 self.addEventListener('install', e => {
