@@ -168,20 +168,22 @@
       'z-index: 10',
     ].join(';');
 
-    const greeting = data.name ? `${escapeHtml(data.name)}, t` : 'T';
+    const greeting = data.name ? `Salut ${escapeHtml(data.name)} 👋` : 'Bonjour 👋';
     banner.innerHTML = `
-      <div style="font-weight:700;font-size:14px;margin-bottom:6px;display:flex;align-items:center;gap:6px;">
-        <span style="font-size:16px;">🔒</span>
-        <span>${greeting}es macros sont calibrées par ton coach Arthur</span>
+      <div style="font-weight:700;font-size:14px;margin-bottom:8px;">
+        ${greeting}
       </div>
-      <div style="opacity:0.92;font-weight:500;">
-        <strong>${data.cal} kcal</strong>
+      <div style="font-weight:500;font-size:13px;margin-bottom:8px;">
+        Ton objectif de calories et macronutriments :
+      </div>
+      <div style="font-weight:500;line-height:1.7;">
+        <strong style="font-size:15px;">${data.cal} kcal</strong>
         &nbsp;·&nbsp; ${data.prot}&nbsp;g protéines
         &nbsp;·&nbsp; ${data.gluc}&nbsp;g glucides
         &nbsp;·&nbsp; ${data.lip}&nbsp;g lipides
       </div>
-      <div style="margin-top:8px;font-size:12px;opacity:0.78;line-height:1.4;">
-        Ces valeurs sont fixes. Ajuste seulement tes préférences (allergies, nombre de repas, régime) ci-dessous pour personnaliser le plan.
+      <div style="margin-top:10px;font-size:12px;opacity:0.78;line-height:1.4;">
+        Défini sur ton application AH Coaching. Ajuste tes préférences ci-dessous (allergies, régime, nombre de repas) pour personnaliser le plan.
       </div>
     `;
 
