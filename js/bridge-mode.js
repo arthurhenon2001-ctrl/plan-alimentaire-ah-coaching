@@ -63,7 +63,39 @@
   // Stockage global pour debug + acces depuis ailleurs si besoin
   window.__BRIDGE_MODE__ = bridgeData;
 
-  // ── 2. Hook DOMContentLoaded pour activer le mode bridge ──
+  // ── 2. Override IMMEDIAT de Calculator.compute (top-level) ──
+  // CRITIQUE : on doit override AVANT que app.js declenche son
+  // DOMContentLoaded qui appelle goToStep(state.currentStep) qui
+  // peut appeler computeAndRenderPlan → Calculator.compute(state).
+  // Si on attendait notre propre DOMContentLoaded, l'override
+  // arriverait trop tard et le message "Remplis d'abord ton profil"
+  // s'afficherait dans #planContent avant qu'on puisse activer le
+  // mode bridge.
+  // bridge-mode.js etant charge APRES calculator.js dans index.html,
+  // window.Calculator est deja defini ici.
+  try {
+    if (typeof window.Calculator === 'object' && typeof window.Calculator.compute === 'function') {
+      window.Calculator.compute = function () {
+        return {
+          targetCals: bridgeData.cal,
+          macros: {
+            protein: bridgeData.prot,
+            carbs: bridgeData.gluc,
+            fat: bridgeData.lip,
+          },
+          tdee: bridgeData.cal,
+          bmr: Math.round(bridgeData.cal * 0.65),
+          deficit: 0,
+          warnings: [],
+          _bridge: true,
+        };
+      };
+    }
+  } catch (e) {
+    console.warn('[bridge-mode] Override Calculator.compute echoue', e);
+  }
+
+  // ── 3. Hook DOMContentLoaded pour activer le mode bridge ──
   // On attend que app.js ait fini son init avant d'override quoi que ce soit.
   // Utilise un setTimeout 0 dans le DOMContentLoaded pour passer APRES le
   // handler de app.js (les handlers s'executent dans l'ordre de declaration,
@@ -84,31 +116,11 @@
     }, 50);
   });
 
-  // ── 3. Activation du mode bridge ──
+  // ── 4. Activation du mode bridge ──
+  // Note : l'override de Calculator.compute est deja fait au top-level
+  // (section 2). Ici on s'occupe juste de state, navigation, banner.
   function activateBridgeMode(data) {
-    // 3.1 — Override Calculator.compute pour bypass le calcul
-    if (typeof window.Calculator === 'object' && typeof window.Calculator.compute === 'function') {
-      window.Calculator.compute = function () {
-        return {
-          targetCals: data.cal,
-          macros: {
-            protein: data.prot,
-            carbs: data.gluc,
-            fat: data.lip,
-          },
-          // Champs additionnels au cas ou le code existant les lit.
-          // Valeurs raisonnables qui ne s'affichent pas en mode bridge
-          // (bandeau prioritaire) mais evitent des undefined.
-          tdee: data.cal,
-          bmr: Math.round(data.cal * 0.65),
-          deficit: 0,
-          warnings: [],
-          _bridge: true,
-        };
-      };
-    }
-
-    // 3.2 — Setter le state.results directement (si state est accessible)
+    // 4.1 — Setter le state.results directement (si state est accessible)
     if (typeof window.state === 'object' && window.state) {
       window.state.results = {
         targetCals: data.cal,
@@ -125,15 +137,15 @@
       };
     }
 
-    // 3.3 — Injecter le bandeau coach
+    // 4.2 — Injecter le bandeau coach
     injectBridgeBanner(data);
 
-    // 3.4 — Forcer le saut a l'etape 3 (preferences alimentaires)
+    // 4.3 — Forcer le saut a l'etape 3 (preferences alimentaires)
     if (typeof window.goToStep === 'function') {
       window.goToStep(3);
     }
 
-    // 3.5 — Bloquer le bouton "Precedent" pour empecher de remonter
+    // 4.4 — Bloquer le bouton "Precedent" pour empecher de remonter
     // aux etapes calcul metabo. On wrappe prevStep, on ne le casse pas.
     if (typeof window.prevStep === 'function') {
       const originalPrev = window.prevStep;
@@ -147,7 +159,7 @@
     }
   }
 
-  // ── 4. Bandeau coach ──
+  // ── 5. Bandeau coach ──
   function injectBridgeBanner(data) {
     if (document.getElementById('bridge-banner')) return; // deja injecte
 
